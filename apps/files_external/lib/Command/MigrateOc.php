@@ -66,15 +66,37 @@ class MigrateOc extends Base {
 
 		$this->migrateStorageConfigPasswords($dryRun, $output);
 		$this->migrateStorageCredentials($dryRun, $output);
-		$this->migrateWndStorage($dryRun, $output);
+		$this->rebuildWndStoragesId($dryRun, $output);
 		$this->migrateWndExternalStorages($dryRun, $output);
+		$this->migrateWndStorageId($dryRun, $output);
 
 		return 0;
 	}
 
-	private function migrateWndStorage(bool $dryRun, OutputInterface $output): void {
+	private function migrateWndStorageId(bool $dryRun, OutputInterface $output): void {
+		$storages = $this->getStorages();
+		$output->writeln("Found <info>" . count($storages) . "</info> wnd storages that cannot be rebuilt");
+
+		foreach ($storages as $storage) {
+			$newId = preg_replace('/^wnd::/', 'smb::', $storage['id']);
+			$newId = preg_replace('/(^smb::.+@.+)\/(.+\/\/$)/', '$1//$2', $newId);
+
+			$output->writeln("	- Rewriting <info>" . $storage['id'] . "</info> to <info>$newId</info>");
+
+			if (!$dryRun) {
+				$query = $this->connection->getQueryBuilder();
+				$query->update('storages')
+					->set('id', $query->createNamedParameter($newId))
+					->where($query->expr()->eq('numeric_id', $query->createNamedParameter($storage['numeric_id'])))
+					->executeStatement();
+			}
+		}
+	}
+
+	private function rebuildWndStoragesId(bool $dryRun, OutputInterface $output): void {
+		$storages = $this->getStorages();
 		$configs = $this->getWndExternalStorageConfigs();
-		$output->writeln("Found <info>" . count($configs) . "</info> wnd storages");
+		$output->writeln("Found <info>" . count($storages) . "</info> wnd storages");
 
 		foreach ($configs as $config) {
 			$output->writeln("<info>" . $config['host'] . ' - ' . $config['auth_backend'] . "</info>");
@@ -203,6 +225,18 @@ class MigrateOc extends Base {
 			$configs[$mountId][$row['key']] = $row['value'];
 		}
 		return $configs;
+	}
+
+	/**
+	 * @return array<int, array<string, string>>
+	 */
+	private function getStorages(): array {
+		$query = $this->connection->getQueryBuilder();
+		return $query->select('numeric_id', 'id')
+			->from('storages')
+			->where($query->expr()->like('id', $query->createNamedParameter('wnd::%')))
+			->executeQuery()
+			->fetchAll();
 	}
 
 	/**
