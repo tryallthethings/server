@@ -14,44 +14,28 @@
 			v-bind="{swapThreshold: 0.30, delay: 500, delayOnTouchOnly: true, touchStartThreshold: 3}"
 			handle=".panel--header"
 			@end="saveLayout">
-			<template v-for="panelId in layout">
-				<div v-if="isApiWidgetV2(panels[panelId].id)"
-					:key="`${panels[panelId].id}-v2`"
-					class="panel">
-					<div class="panel--header">
-						<h2>
-							<span :aria-labelledby="`panel-${panels[panelId].id}--header--icon--description`"
-								aria-hidden="true"
-								:class="apiWidgets[panels[panelId].id].icon_class"
-								role="img" />
-							{{ apiWidgets[panels[panelId].id].title }}
-						</h2>
-						<span :id="`panel-${panels[panelId].id}--header--icon--description`" class="hidden-visually">
-							{{ t('dashboard', '"{title} icon"', { title: apiWidgets[panels[panelId].id].title }) }}
-						</span>
-					</div>
-					<div class="panel--content">
-						<ApiDashboardWidget :widget="apiWidgets[panels[panelId].id]"
-							:data="apiWidgetItems[panels[panelId].id]"
-							:loading="loadingItems" />
-					</div>
+			<div v-for="panelId in layout" :key="panels[panelId].id" class="panel">
+				<div class="panel--header">
+					<h2>
+						<span :aria-labelledby="`panel-${panels[panelId].id}--header-icon-description`"
+							aria-hidden="true"
+							class="panel--header-icon"
+							:class="getWidgetIconClass(panels[panelId])"
+							role="img" />
+						{{ getWidgetTitle(panels[panelId]) }}
+					</h2>
+					<span :id="`panel-${panels[panelId].id}--header-icon-description`" class="hidden-visually">
+						{{ t('dashboard', '"{title} icon"', { title: getWidgetTitle(panels[panelId]) }) }}
+					</span>
 				</div>
-				<div v-else :key="panels[panelId].id" class="panel">
-					<div class="panel--header">
-						<h2>
-							<span :aria-labelledby="`panel-${panels[panelId].id}--header--icon--description`"
-								aria-hidden="true"
-								:class="panels[panelId].iconClass"
-								role="img" />
-							{{ panels[panelId].title }}
-						</h2>
-						<span :id="`panel-${panels[panelId].id}--header--icon--description`" class="hidden-visually"> {{ t('dashboard', '"{title} icon"', { title: panels[panelId].title }) }} </span>
-					</div>
-					<div class="panel--content" :class="{ loading: !panels[panelId].mounted }">
-						<div :ref="panels[panelId].id" :data-id="panels[panelId].id" />
-					</div>
+				<div class="panel--content" :class="{ loading: !isApiWidgetV2(panels[panelId].id) && !panels[panelId].mounted }">
+					<ApiDashboardWidget v-if="isApiWidgetV2(panels[panelId].id)"
+						:widget="apiWidgets[panels[panelId].id]"
+						:data="apiWidgetItems[panels[panelId].id]"
+						:loading="loadingItems" />
+					<div v-else :ref="panels[panelId].id" :data-id="panels[panelId].id" />
 				</div>
-			</template>
+			</div>
 		</Draggable>
 
 		<div class="footer">
@@ -443,6 +427,7 @@ export default {
 				this.loadingItems = false
 			}
 		},
+
 		isApiWidgetV2(id) {
 			for (const widget of Object.values(this.apiWidgets)) {
 				if (widget.id === id && widget.item_api_versions.includes(2)) {
@@ -450,6 +435,14 @@ export default {
 				}
 			}
 			return false
+		},
+
+		getWidgetIconClass(panel) {
+			return this.isApiWidgetV2(panel.id) ? this.apiWidgets[panel.id].icon_class : panel.iconClass
+		},
+
+		getWidgetTitle(panel) {
+			return this.isApiWidgetV2(panel.id) ? this.apiWidgets[panel.id].title : panel.title
 		},
 	},
 }
