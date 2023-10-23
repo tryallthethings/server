@@ -17,16 +17,9 @@
 			<div v-for="panelId in layout" :key="panels[panelId].id" class="panel">
 				<div class="panel--header">
 					<h2>
-						<span :aria-labelledby="`panel-${panels[panelId].id}--header-icon-description`"
-							aria-hidden="true"
-							class="panel--header-icon"
-							:class="getWidgetIconClass(panels[panelId])"
-							role="img" />
+						<span aria-hidden="true" class="panel__header-icon" :class="getWidgetIconClass(panels[panelId])" />
 						{{ getWidgetTitle(panels[panelId]) }}
 					</h2>
-					<span :id="`panel-${panels[panelId].id}--header-icon-description`" class="hidden-visually">
-						{{ t('dashboard', '"{title} icon"', { title: getWidgetTitle(panels[panelId]) }) }}
-					</span>
 				</div>
 				<div class="panel--content" :class="{ loading: !isApiWidgetV2(panels[panelId].id) && !panels[panelId].mounted }">
 					<ApiDashboardWidget v-if="isApiWidgetV2(panels[panelId].id)"
