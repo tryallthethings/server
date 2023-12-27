@@ -158,6 +158,9 @@ class ClientFlowLoginController extends Controller {
 			ISecureRandom::CHAR_LOWER.ISecureRandom::CHAR_UPPER.ISecureRandom::CHAR_DIGITS
 		);
 		$this->session->set(self::STATE_NAME, $stateToken);
+		logger('core')->error('Client login flow state token set', [
+			'token' => $stateToken,
+		]);
 
 		$csp = new Http\ContentSecurityPolicy();
 		if ($client) {
