@@ -21,10 +21,16 @@
   -->
 
 <template>
-	<div id="app-content-inner" class="{ 'with-app-sidebar': !!selectedApp }">
-		<div id="apps-list" class="apps-list" :class="{installed: (useBundleView || useListView), store: useAppStoreView }">
+	<div id="app-content-inner">
+		<div id="apps-list"
+			class="apps-list"
+			:class="{
+				'apps-list--list-view': (useBundleView || useListView),
+				'apps-list--store-view': useAppStoreView,
+				'apps-list--with-sidebar': !!selectedApp,
+			}">
 			<template v-if="useListView">
-				<div v-if="showUpdateAll" class="toolbar">
+				<div v-if="showUpdateAll" class="apps-list__toolbar">
 					{{ n('settings', '%n app has an update available', '%n apps have an update available', counter) }}
 					<NcButton v-if="showUpdateAll"
 						id="app-list-update-all"
@@ -34,11 +40,11 @@
 					</NcButton>
 				</div>
 
-				<div v-if="!showUpdateAll" class="toolbar">
+				<div v-if="!showUpdateAll" class="apps-list__toolbar">
 					{{ t('settings', 'All apps are up-to-date.') }}
 				</div>
 
-				<transition-group name="app-list" tag="table" class="apps-list-container">
+				<TransitionGroup name="apps-list" tag="table" class="apps-list__list-container">
 					<tr key="app-list-view-header">
 						<th>
 							<span class="hidden-visually">{{ t('settings', 'Icon') }}</span>
@@ -60,11 +66,11 @@
 						:key="app.id"
 						:app="app"
 						:category="category" />
-				</transition-group>
+				</TransitionGroup>
 			</template>
 
 			<table v-if="useBundleView"
-				class="apps-list-container">
+				class="apps-list__list-container">
 				<tr key="app-list-view-header">
 					<th id="app-table-col-icon">
 						<span class="hidden-visually">{{ t('settings', 'Icon') }}</span>
@@ -85,8 +91,8 @@
 				<template v-for="bundle in bundles">
 					<tr :key="bundle.id">
 						<th :id="`app-table-rowgroup-${bundle.id}`" colspan="5" scope="rowgroup">
-							<div class="app-bundle-heading">
-								<span class="app-bundle-header">
+							<div class="apps-list__bundle-heading">
+								<span class="apps-list__bundle-header">
 									{{ bundle.name }}
 								</span>
 								<NcButton type="secondary" @click="toggleBundle(bundle.id)">
@@ -103,7 +109,7 @@
 						:category="category" />
 				</template>
 			</table>
-			<ul v-if="useAppStoreView" class="apps-store-view">
+			<ul v-if="useAppStoreView" class="apps-list__store-container">
 				<AppItem v-for="app in apps"
 					:key="app.id"
 					:app="app"
@@ -112,10 +118,10 @@
 			</ul>
 		</div>
 
-		<div id="apps-list-search" class="apps-list installed">
-			<div class="apps-list-container">
+		<div id="apps-list-search" class="apps-list apps-list--list-view">
+			<div class="apps-list__list-container">
 				<template v-if="search !== '' && searchApps.length > 0">
-					<div class="section">
+					<div class="app-item">
 						<div />
 						<td colspan="5">
 							<h2>{{ t('settings', 'Results from other categories') }}</h2>
