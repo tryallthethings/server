@@ -27,7 +27,6 @@
 			:class="{
 				'apps-list--list-view': (useBundleView || useListView),
 				'apps-list--store-view': useAppStoreView,
-				'apps-list--with-sidebar': !!selectedApp,
 			}">
 			<template v-if="useListView">
 				<div v-if="showUpdateAll" class="apps-list__toolbar">
@@ -201,6 +200,7 @@ export default {
 				// An app level of `200` will be set for apps featured on the app store
 				return apps.filter(app => app.level === 200)
 			}
+
 			// filter app store categories
 			return apps.filter(app => {
 				return app.appstore && app.category !== undefined
@@ -229,9 +229,6 @@ export default {
 					}
 					return false
 				})
-		},
-		selectedApp() {
-			return this.apps.find(app => app.id === this.$route.params.id)
 		},
 		useAppStoreView() {
 			return !this.useListView && !this.useBundleView
