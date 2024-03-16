@@ -206,6 +206,7 @@ export default {
 
 <style scoped lang="scss">
 @use '../../../../../core/css/variables.scss' as variables;
+@use 'sass:math';
 
 .app-item {
 	position: relative;
@@ -215,6 +216,9 @@ export default {
 	}
 
 	&--list-view {
+		--app-item-padding: calc(var(--default-grid-baseline) * 2);
+		--app-item-height: calc(var(--default-clickable-area) + var(--app-item-padding) * 2);
+
 		&.app-item--selected {
 			background-color: var(--color-background-dark);
 		}
@@ -222,11 +226,12 @@ export default {
 		> * {
 			vertical-align: middle;
 			border-bottom: 1px solid var(--color-border);
-			padding: 6px;
+			padding: var(--app-item-padding);
+			height: var(--app-item-height);
 		}
 
 		.app-image {
-			width: 44px;
+			width: var(--default-clickable-area);
 			height: auto;
 			text-align: right;
 		}
@@ -241,9 +246,30 @@ export default {
 			display: inline-block;
 		}
 
+		.app-name {
+			padding: 0 var(--app-item-padding);
+		}
+
+		.app-name--link {
+			height: var(--app-item-height);
+			display: flex;
+			align-items: center;
+		}
+
+		// Note: because of Safari bug, we cannot position link overlay relative to the table row
+		// So we need to manually position it relative to the table container and cell
+		// See: https://bugs.webkit.org/show_bug.cgi?id=240961
+		.app-name--link::after {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			height: var(--app-item-height);
+		}
+
 		.app-actions {
 			display: flex;
-			gap: 8px;
+			gap: var(--app-item-padding);
 			flex-wrap: wrap;
 			justify-content: end;
 
@@ -258,7 +284,14 @@ export default {
 		@media only screen and (max-width: 900px) {
 			.app-version,
 			.app-level {
-				display: none !important;
+				display: none;
+			}
+		}
+
+		/* Hide actions on a small screen. Click on app opens fill-screen sidebar with the buttons */
+		@media only screen and (max-width: math.div(variables.$breakpoint-mobile, 2)) {
+			.app-actions {
+				display: none;
 			}
 		}
 	}
@@ -284,6 +317,15 @@ export default {
 
 		.app-name {
 			margin: 5px 0;
+		}
+
+		.app-name--link::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
 		}
 
 		.app-actions {
