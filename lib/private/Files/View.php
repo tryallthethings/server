@@ -57,6 +57,7 @@ use OCP\Constants;
 use OCP\Files\Cache\ICacheEntry;
 use OCP\Files\EmptyFileNameException;
 use OCP\Files\FileNameTooLongException;
+use OCP\Files\ForbiddenException;
 use OCP\Files\InvalidCharacterInPathException;
 use OCP\Files\InvalidDirectoryException;
 use OCP\Files\InvalidPathException;
@@ -762,6 +763,11 @@ class View {
 	public function rename($path1, $path2) {
 		$absolutePath1 = Filesystem::normalizePath($this->getAbsolutePath($path1));
 		$absolutePath2 = Filesystem::normalizePath($this->getAbsolutePath($path2));
+
+		if (str_starts_with($absolutePath2, $absolutePath1 . '/')) {
+			throw new ForbiddenException("Moving a folder into a child folder is forbidden", false);
+		}
+
 		$result = false;
 		if (
 			Filesystem::isValidPath($path2)
