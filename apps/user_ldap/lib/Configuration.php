@@ -7,6 +7,7 @@
  */
 namespace OCA\User_LDAP;
 
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -296,6 +297,9 @@ class Configuration {
 					case 'ldapGroupDisplayName':
 						$readMethod = 'getLcValue';
 						break;
+					case 'markRemnantsAsDisabled':
+						$readMethod = 'getGlobalAppValueAsBool';
+						break;
 					case 'ldapUserDisplayName':
 					default:
 						// user display name does not lower case because
@@ -340,6 +344,7 @@ class Configuration {
 				case 'ldapIgnoreNamingRules':
 				case 'ldapUuidUserAttribute':
 				case 'ldapUuidGroupAttribute':
+				case 'markRemnantsAsDisabled':
 					continue 2;
 			}
 			if (is_null($value)) {
@@ -412,6 +417,14 @@ class Configuration {
 
 	protected function getLcValue(string $varName): string {
 		return mb_strtolower($this->getValue($varName), 'UTF-8');
+	}
+
+	protected function getGlobalAppValueAsBool(string $varName): bool {
+		static $appConfig;
+		if (!$appConfig) {
+			$appConfig = \OCP\Server::get(IAppConfig::class);
+		}
+		return $appConfig->getValueBool('user_ldap', $varName, false);
 	}
 
 	protected function getSystemValue(string $varName): string {
