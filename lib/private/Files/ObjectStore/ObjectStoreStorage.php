@@ -1,33 +1,10 @@
 <?php
-/**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Marcel Klehr <mklehr@gmx.net>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Tigran Mkrtchyan <tigran.mkrtchyan@desy.de>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
- */
 
+/**
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
 namespace OC\Files\ObjectStore;
 
 use Aws\S3\Exception\S3Exception;
@@ -152,10 +129,6 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common implements IChunkedFil
 	/**
 	 * Object Stores use a NoopScanner because metadata is directly stored in
 	 * the file cache and cannot really scan the filesystem. The storage passed in is not used anywhere.
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the scanner
-	 * @return \OC\Files\ObjectStore\ObjectStoreScanner
 	 */
 	public function getScanner($path = '', $storage = null) {
 		if (!$storage) {
@@ -164,6 +137,7 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common implements IChunkedFil
 		if (!isset($this->scanner)) {
 			$this->scanner = new ObjectStoreScanner($storage);
 		}
+		/** @var \OC\Files\ObjectStore\ObjectStoreScanner */
 		return $this->scanner;
 	}
 
@@ -494,7 +468,7 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common implements IChunkedFil
 		return $result;
 	}
 
-	public function writeStream(string $path, $stream, int $size = null): int {
+	public function writeStream(string $path, $stream, ?int $size = null): int {
 		$stat = $this->stat($path);
 		if (empty($stat)) {
 			// create new file
@@ -617,6 +591,36 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common implements IChunkedFil
 		return parent::copyFromStorage($sourceStorage, $sourceInternalPath, $targetInternalPath);
 	}
 
+	public function moveFromStorage(IStorage $sourceStorage, $sourceInternalPath, $targetInternalPath, ?ICacheEntry $sourceCacheEntry = null): bool {
+		$sourceCache = $sourceStorage->getCache();
+		if ($sourceStorage->instanceOfStorage(ObjectStoreStorage::class) && $sourceStorage->getObjectStore()->getStorageId() === $this->getObjectStore()->getStorageId()) {
+			$this->getCache()->moveFromCache($sourceCache, $sourceInternalPath, $targetInternalPath);
+			// Do not import any data when source and target bucket are identical.
+			return true;
+		}
+		if (!$sourceCacheEntry) {
+			$sourceCacheEntry = $sourceCache->get($sourceInternalPath);
+		}
+		if ($sourceCacheEntry->getMimeType() === FileInfo::MIMETYPE_FOLDER) {
+			foreach ($sourceCache->getFolderContents($sourceInternalPath) as $child) {
+				$this->moveFromStorage($sourceStorage, $child->getPath(), $targetInternalPath . '/' . $child->getName());
+			}
+			$sourceStorage->rmdir($sourceInternalPath);
+		} else {
+			// move the cache entry before the contents so that we have the correct fileid/urn for the target
+			$this->getCache()->moveFromCache($sourceCache, $sourceInternalPath, $targetInternalPath);
+			try {
+				$this->writeStream($targetInternalPath, $sourceStorage->fopen($sourceInternalPath, 'r'), $sourceCacheEntry->getSize());
+			} catch (\Exception $e) {
+				// restore the cache entry
+				$sourceCache->moveFromCache($this->getCache(), $targetInternalPath, $sourceInternalPath);
+				throw $e;
+			}
+			$sourceStorage->unlink($sourceInternalPath);
+		}
+		return true;
+	}
+
 	public function copy($source, $target) {
 		$source = $this->normalizePath($source);
 		$target = $this->normalizePath($target);
@@ -655,7 +659,7 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common implements IChunkedFil
 		$sourceUrn = $this->getURN($sourceEntry->getId());
 
 		if (!$cache instanceof Cache) {
-			throw new \Exception("Invalid source cache for object store copy");
+			throw new \Exception('Invalid source cache for object store copy');
 		}
 
 		$targetId = $cache->copyFromCache($cache, $sourceEntry, $to);

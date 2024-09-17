@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<section :aria-roledescription="t('settings', 'Carousel')" :aria-labelledby="headingId ? `${headingId}` : undefined">
 		<h3 v-if="headline" :id="headingId">
@@ -161,10 +165,10 @@ h3 {
 
 		// See padding of discover section
 		&--next {
-			right: -54px;
+			inset-inline-end: -54px;
 		}
 		&--previous {
-			left: -54px;
+			inset-inline-start: -54px;
 		}
 	}
 

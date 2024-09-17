@@ -1,27 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Files\Storage;
 
@@ -46,7 +28,7 @@ class Home extends Local implements \OCP\Files\IHomeStorage {
 	 * Construct a Home storage instance
 	 *
 	 * @param array $arguments array with "user" containing the
-	 * storage owner
+	 *                         storage owner
 	 */
 	public function __construct($arguments) {
 		$this->user = $arguments['user'];
@@ -70,15 +52,10 @@ class Home extends Local implements \OCP\Files\IHomeStorage {
 		if (!isset($this->cache)) {
 			$this->cache = new \OC\Files\Cache\HomeCache($storage, $this->getCacheDependencies());
 		}
+		/** @var \OC\Files\Cache\HomeCache */
 		return $this->cache;
 	}
 
-	/**
-	 * get a propagator instance for the cache
-	 *
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the watcher
-	 * @return \OC\Files\Cache\Propagator
-	 */
 	public function getPropagator($storage = null) {
 		if (!$storage) {
 			$storage = $this;
@@ -86,6 +63,7 @@ class Home extends Local implements \OCP\Files\IHomeStorage {
 		if (!isset($this->propagator)) {
 			$this->propagator = new HomePropagator($storage, \OC::$server->getDatabaseConnection());
 		}
+		/** @var \OC\Files\Cache\Propagator */
 		return $this->propagator;
 	}
 
@@ -99,13 +77,7 @@ class Home extends Local implements \OCP\Files\IHomeStorage {
 		return $this->user;
 	}
 
-	/**
-	 * get the owner of a path
-	 *
-	 * @param string $path The path to get the owner
-	 * @return string uid or false
-	 */
-	public function getOwner($path) {
+	public function getOwner($path): string|false {
 		return $this->user->getUID();
 	}
 }

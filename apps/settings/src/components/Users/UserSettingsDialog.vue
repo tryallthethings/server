@@ -1,23 +1,6 @@
 <!--
-	- @copyright 2023 Christopher Ng <chrng8@gmail.com>
-	-
-	- @author Christopher Ng <chrng8@gmail.com>
-	-
-	- @license AGPL-3.0-or-later
-	-
-	- This program is free software: you can redistribute it and/or modify
-	- it under the terms of the GNU Affero General Public License as
-	- published by the Free Software Foundation, either version 3 of the
-	- License, or (at your option) any later version.
-	-
-	- This program is distributed in the hope that it will be useful,
-	- but WITHOUT ANY WARRANTY; without even the implied warranty of
-	- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-	- GNU Affero General Public License for more details.
-	-
-	- You should have received a copy of the GNU Affero General Public License
-	- along with this program. If not, see <http://www.gnu.org/licenses/>.
-	-
+  - SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 <template>
@@ -46,6 +29,32 @@
 				:checked.sync="showLastLogin">
 				{{ t('settings', 'Show last login') }}
 			</NcCheckboxRadioSwitch>
+		</NcAppSettingsSection>
+
+		<NcAppSettingsSection id="groups-sorting"
+			:name="t('settings', 'Sorting')">
+			<NcNoteCard v-if="isGroupSortingEnforced" type="warning">
+				{{ t('settings', 'The system config enforces sorting the groups by name. This also disables showing the member count.') }}
+			</NcNoteCard>
+			<fieldset>
+				<legend>{{ t('settings', 'Group list sorting') }}</legend>
+				<NcCheckboxRadioSwitch type="radio"
+					:checked.sync="groupSorting"
+					data-test="sortGroupsByMemberCount"
+					:disabled="isGroupSortingEnforced"
+					name="group-sorting-mode"
+					value="member-count">
+					{{ t('settings', 'By member count') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch type="radio"
+					:checked.sync="groupSorting"
+					data-test="sortGroupsByName"
+					:disabled="isGroupSortingEnforced"
+					name="group-sorting-mode"
+					value="name">
+					{{ t('settings', 'By name') }}
+				</NcCheckboxRadioSwitch>
+			</fieldset>
 		</NcAppSettingsSection>
 
 		<NcAppSettingsSection id="email-settings"
@@ -81,8 +90,10 @@ import axios from '@nextcloud/axios'
 import NcAppSettingsDialog from '@nextcloud/vue/dist/Components/NcAppSettingsDialog.js'
 import NcAppSettingsSection from '@nextcloud/vue/dist/Components/NcAppSettingsSection.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
+import { GroupSorting } from '../../constants/GroupManagement.ts'
 import { unlimitedQuota } from '../../utils/userUtils.ts'
 
 export default {
@@ -92,6 +103,7 @@ export default {
 		NcAppSettingsDialog,
 		NcAppSettingsSection,
 		NcCheckboxRadioSwitch,
+		NcNoteCard,
 		NcSelect,
 	},
 
@@ -110,6 +122,22 @@ export default {
 	},
 
 	computed: {
+		groupSorting: {
+			get() {
+				return this.$store.getters.getGroupSorting === GroupSorting.GroupName ? 'name' : 'member-count'
+			},
+			set(sorting) {
+				this.$store.commit('setGroupSorting', sorting === 'name' ? GroupSorting.GroupName : GroupSorting.UserCount)
+			},
+		},
+
+		/**
+		 * Admin has configured `sort_groups_by_name` in the system config
+		 */
+		isGroupSortingEnforced() {
+			return this.$store.getters.getServerData.forceSortGroupByName
+		},
+
 		isModalOpen: {
 			get() {
 				return this.open
@@ -261,3 +289,9 @@ export default {
 	},
 }
 </script>
+
+<style scoped lang="scss">
+fieldset {
+	font-weight: bold;
+}
+</style>

@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright (c) 2014 Robin Appelman <icewind@owncloud.com>
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Files\Cache\Wrapper;
@@ -11,6 +10,7 @@ namespace Test\Files\Cache\Wrapper;
 use OC\Files\Cache\Wrapper\CacheJail;
 use OC\Files\Search\SearchComparison;
 use OC\Files\Search\SearchQuery;
+use OC\Files\Storage\Wrapper\Jail;
 use OC\User\User;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Search\ISearchComparison;
@@ -36,7 +36,7 @@ class CacheJailTest extends CacheTest {
 		$this->cache = new \OC\Files\Cache\Wrapper\CacheJail($this->sourceCache, 'foo');
 	}
 
-	public function testSearchOutsideJail() {
+	public function testSearchOutsideJail(): void {
 		$this->storage->getScanner()->scan('');
 		$file1 = 'foo/foobar';
 		$file2 = 'folder/foobar';
@@ -60,7 +60,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertEquals('foobar', $result[1]['path']);
 	}
 
-	public function testSearchMimeOutsideJail() {
+	public function testSearchMimeOutsideJail(): void {
 		$this->storage->getScanner()->scan('');
 		$file1 = 'foo/foobar';
 		$file2 = 'folder/foobar';
@@ -76,7 +76,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertEquals('foobar', $result[0]['path']);
 	}
 
-	public function testSearchQueryOutsideJail() {
+	public function testSearchQueryOutsideJail(): void {
 		$this->storage->getScanner()->scan('');
 		$file1 = 'foo/foobar';
 		$file2 = 'folder/foobar';
@@ -98,7 +98,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertEquals('', $result[0]['path']);
 	}
 
-	public function testClearKeepEntriesOutsideJail() {
+	public function testClearKeepEntriesOutsideJail(): void {
 		$file1 = 'foo/foobar';
 		$file2 = 'foo/foobar/asd';
 		$file3 = 'folder/foobar';
@@ -115,7 +115,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertTrue($this->sourceCache->inCache('folder/foobar'));
 	}
 
-	public function testGetById() {
+	public function testGetById(): void {
 		$data1 = ['size' => 100, 'mtime' => 50, 'mimetype' => 'httpd/unix-directory'];
 		$id = $this->sourceCache->put('foo/bar', $data1);
 
@@ -129,12 +129,12 @@ class CacheJailTest extends CacheTest {
 		$this->assertEquals('foo/bar', $path);
 	}
 
-	public function testGetIncomplete() {
+	public function testGetIncomplete(): void {
 		//not supported
 		$this->addToAssertionCount(1);
 	}
 
-	public function testMoveFromJail() {
+	public function testMoveFromJail(): void {
 		$folderData = ['size' => 100, 'mtime' => 50, 'mimetype' => 'httpd/unix-directory'];
 
 		$this->sourceCache->put('source', $folderData);
@@ -150,7 +150,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertTrue($this->sourceCache->inCache('target/foo/bar'));
 	}
 
-	public function testMoveToJail() {
+	public function testMoveToJail(): void {
 		$folderData = ['size' => 100, 'mtime' => 50, 'mimetype' => 'httpd/unix-directory'];
 
 		$this->sourceCache->put('source', $folderData);
@@ -166,7 +166,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertTrue($this->sourceCache->inCache('target/foo/bar'));
 	}
 
-	public function testMoveBetweenJail() {
+	public function testMoveBetweenJail(): void {
 		$folderData = ['size' => 100, 'mtime' => 50, 'mimetype' => 'httpd/unix-directory'];
 
 		$this->sourceCache->put('source', $folderData);
@@ -183,7 +183,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertTrue($this->sourceCache->inCache('target/foo/bar'));
 	}
 
-	public function testSearchNested() {
+	public function testSearchNested(): void {
 		$this->storage->getScanner()->scan('');
 		$file1 = 'foo';
 		$file2 = 'foo/bar';
@@ -201,7 +201,7 @@ class CacheJailTest extends CacheTest {
 		$this->assertEquals('asd', $result[0]['path']);
 	}
 
-	public function testRootJail() {
+	public function testRootJail(): void {
 		$this->storage->getScanner()->scan('');
 		$file1 = 'foo';
 		$file2 = 'foo/bar';
@@ -217,5 +217,34 @@ class CacheJailTest extends CacheTest {
 		$result = $nested->search('%asd%');
 		$this->assertCount(1, $result);
 		$this->assertEquals('foo/bar/asd', $result[0]['path']);
+	}
+
+	public function testWatcher(): void {
+		$storage = new Jail([
+			'storage' => $this->storage,
+			'root' => 'foo'
+		]);
+		$storage->getScanner()->scan('');
+		$storage->file_put_contents('bar', 'asd');
+
+		$this->assertFalse($this->cache->inCache('bar'));
+		$storage->getWatcher()->update('bar', ['mimetype' => 'text/plain']);
+		$this->assertTrue($this->cache->inCache('bar'));
+	}
+
+	public function testWatcherAfterInnerWatcher(): void {
+		$storage = new Jail([
+			'storage' => $this->storage,
+			'root' => 'foo'
+		]);
+		$storage->getScanner()->scan('');
+		$storage->file_put_contents('bar', 'asd');
+
+		// let the underlying storage create it's watcher first
+		$this->storage->getWatcher();
+
+		$this->assertFalse($this->cache->inCache('bar'));
+		$storage->getWatcher()->update('bar', ['mimetype' => 'text/plain']);
+		$this->assertTrue($this->cache->inCache('bar'));
 	}
 }

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<div class="timeslot">
 		<input v-model="newValue.startTime"
@@ -116,7 +120,7 @@ export default {
 			min-height: 48px;
 
 			&.timeslot--start {
-				margin-right: 5px;
+				margin-inline-end: 5px;
 				width: calc(50% - 5px);
 			}
 		}

@@ -1,29 +1,11 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Christoph Wurst <christoph@winzerhof-wurst.at>
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\Settings\Activity;
 
-use InvalidArgumentException;
+use OCP\Activity\Exceptions\UnknownActivityException;
 use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\Activity\IProvider;
@@ -64,9 +46,9 @@ class GroupProvider implements IProvider {
 		$this->groupManager = $groupManager;
 	}
 
-	public function parse($language, IEvent $event, IEvent $previousEvent = null) {
+	public function parse($language, IEvent $event, ?IEvent $previousEvent = null) {
 		if ($event->getType() !== 'group_settings') {
-			throw new InvalidArgumentException();
+			throw new UnknownActivityException();
 		}
 
 		$l = $this->l10n->get('settings', $language);
@@ -113,7 +95,7 @@ class GroupProvider implements IProvider {
 				}
 				break;
 			default:
-				throw new InvalidArgumentException();
+				throw new UnknownActivityException();
 		}
 
 		$this->setSubjects($event, $subject, $parsedParameters);

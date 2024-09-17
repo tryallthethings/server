@@ -1,36 +1,10 @@
 <?php
 
 declare(strict_types=1);
-
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author zulan <git@zulan.net>
- * @author Stephan Orbaugh <stephan.orbaugh@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2019-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Settings\AppInfo;
 
@@ -48,6 +22,7 @@ use OCA\Settings\Middleware\SubadminMiddleware;
 use OCA\Settings\Search\AppSearch;
 use OCA\Settings\Search\SectionSearch;
 use OCA\Settings\Search\UserSearch;
+use OCA\Settings\SetupChecks\AllowedAdminRanges;
 use OCA\Settings\SetupChecks\AppDirsWithDifferentOwner;
 use OCA\Settings\SetupChecks\BruteForceThrottler;
 use OCA\Settings\SetupChecks\CheckUserCertificates;
@@ -71,9 +46,11 @@ use OCA\Settings\SetupChecks\JavaScriptSourceMaps;
 use OCA\Settings\SetupChecks\LegacySSEKeyFormat;
 use OCA\Settings\SetupChecks\MaintenanceWindowStart;
 use OCA\Settings\SetupChecks\MemcacheConfigured;
+use OCA\Settings\SetupChecks\MimeTypeMigrationAvailable;
 use OCA\Settings\SetupChecks\MysqlUnicodeSupport;
 use OCA\Settings\SetupChecks\OcxProviders;
 use OCA\Settings\SetupChecks\OverwriteCliUrl;
+use OCA\Settings\SetupChecks\PhpApcuConfig;
 use OCA\Settings\SetupChecks\PhpDefaultCharset;
 use OCA\Settings\SetupChecks\PhpDisabledFunctions;
 use OCA\Settings\SetupChecks\PhpFreetypeSupport;
@@ -86,6 +63,7 @@ use OCA\Settings\SetupChecks\PhpOutputBuffering;
 use OCA\Settings\SetupChecks\PushService;
 use OCA\Settings\SetupChecks\RandomnessSecure;
 use OCA\Settings\SetupChecks\ReadOnlyConfig;
+use OCA\Settings\SetupChecks\SchedulingTableSize;
 use OCA\Settings\SetupChecks\SecurityHeaders;
 use OCA\Settings\SetupChecks\SupportedDatabase;
 use OCA\Settings\SetupChecks\SystemIs64bit;
@@ -178,6 +156,7 @@ class Application extends App implements IBootstrap {
 				Util::getDefaultEmailAddress('no-reply')
 			);
 		});
+		$context->registerSetupCheck(AllowedAdminRanges::class);
 		$context->registerSetupCheck(AppDirsWithDifferentOwner::class);
 		$context->registerSetupCheck(BruteForceThrottler::class);
 		$context->registerSetupCheck(CheckUserCertificates::class);
@@ -201,12 +180,14 @@ class Application extends App implements IBootstrap {
 		$context->registerSetupCheck(LegacySSEKeyFormat::class);
 		$context->registerSetupCheck(MaintenanceWindowStart::class);
 		$context->registerSetupCheck(MemcacheConfigured::class);
+		$context->registerSetupCheck(MimeTypeMigrationAvailable::class);
 		$context->registerSetupCheck(MysqlUnicodeSupport::class);
 		$context->registerSetupCheck(OcxProviders::class);
 		$context->registerSetupCheck(OverwriteCliUrl::class);
 		$context->registerSetupCheck(PhpDefaultCharset::class);
 		$context->registerSetupCheck(PhpDisabledFunctions::class);
 		$context->registerSetupCheck(PhpFreetypeSupport::class);
+		$context->registerSetupCheck(PhpApcuConfig::class);
 		$context->registerSetupCheck(PhpGetEnv::class);
 		$context->registerSetupCheck(PhpMemoryLimit::class);
 		$context->registerSetupCheck(PhpModules::class);
@@ -216,6 +197,7 @@ class Application extends App implements IBootstrap {
 		$context->registerSetupCheck(RandomnessSecure::class);
 		$context->registerSetupCheck(ReadOnlyConfig::class);
 		$context->registerSetupCheck(SecurityHeaders::class);
+		$context->registerSetupCheck(SchedulingTableSize::class);
 		$context->registerSetupCheck(SupportedDatabase::class);
 		$context->registerSetupCheck(SystemIs64bit::class);
 		$context->registerSetupCheck(TempSpaceAvailable::class);

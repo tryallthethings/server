@@ -1,26 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Lukas Reschke <lukas@statuscode.ch>
- *
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\OAuth2\Tests\Db;
 
@@ -47,7 +28,7 @@ class ClientMapperTest extends TestCase {
 		parent::tearDown();
 	}
 
-	public function testGetByIdentifier() {
+	public function testGetByIdentifier(): void {
 		$client = new Client();
 		$client->setClientIdentifier('MyAwesomeClientIdentifier');
 		$client->setName('Client Name');
@@ -58,13 +39,13 @@ class ClientMapperTest extends TestCase {
 		$this->assertEquals($client, $this->clientMapper->getByIdentifier('MyAwesomeClientIdentifier'));
 	}
 
-	public function testGetByIdentifierNotExisting() {
+	public function testGetByIdentifierNotExisting(): void {
 		$this->expectException(\OCA\OAuth2\Exceptions\ClientNotFoundException::class);
 
 		$this->clientMapper->getByIdentifier('MyTotallyNotExistingClient');
 	}
 
-	public function testGetByUid() {
+	public function testGetByUid(): void {
 		$client = new Client();
 		$client->setClientIdentifier('MyNewClient');
 		$client->setName('Client Name');
@@ -75,13 +56,13 @@ class ClientMapperTest extends TestCase {
 		$this->assertEquals($client, $this->clientMapper->getByUid($client->getId()));
 	}
 
-	public function testGetByUidNotExisting() {
+	public function testGetByUidNotExisting(): void {
 		$this->expectException(\OCA\OAuth2\Exceptions\ClientNotFoundException::class);
 
 		$this->clientMapper->getByUid(1234);
 	}
 
-	public function testGetClients() {
+	public function testGetClients(): void {
 		$this->assertSame('array', gettype($this->clientMapper->getClients()));
 	}
 

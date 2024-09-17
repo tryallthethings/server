@@ -1,32 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bernhard Reiter <ockham@raz.or.at>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Tanghus <thomas@tanghus.net>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC;
 
@@ -172,7 +149,7 @@ class Tags implements ITags {
 	 *
 	 * @param array $objIds array of object ids
 	 * @return array|false of tags id as key to array of tag names
-	 * or false if an error occurred
+	 *                     or false if an error occurred
 	 */
 	public function getTagsForObjects(array $objIds) {
 		$entries = [];
@@ -271,8 +248,7 @@ class Tags implements ITags {
 	 * @param string $user The user whose tags are to be checked.
 	 */
 	public function userHasTag(string $name, string $user): bool {
-		$key = $this->array_searchi($name, $this->getTagsForUser($user));
-		return ($key !== false) ? $this->tags[$key]->getId() : false;
+		return $this->array_searchi($name, $this->getTagsForUser($user)) !== false;
 	}
 
 	/**
@@ -366,7 +342,7 @@ class Tags implements ITags {
 	 * Add a list of new tags.
 	 *
 	 * @param string|string[] $names A string with a name or an array of strings containing
-	 * the name(s) of the tag(s) to add.
+	 *                               the name(s) of the tag(s) to add.
 	 * @param bool $sync When true, save the tags
 	 * @param int|null $id int Optional object id to add to this|these tag(s)
 	 * @return bool Returns false on error.

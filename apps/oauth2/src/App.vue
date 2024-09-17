@@ -1,24 +1,7 @@
 <!--
-  - @copyright Copyright (c) 2018 Roeland Jago Douma <roeland@famdouma.nl>
-  -
-  - @author Roeland Jago Douma <roeland@famdouma.nl>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
+  - SPDX-FileCopyrightText: 2018 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<NcSettingsSection :name="t('oauth2', 'OAuth 2.0 clients')"
 		:description="t('oauth2', 'OAuth 2.0 allows external services to request access to {instanceName}.', { instanceName })"
@@ -50,6 +33,10 @@
 					@delete="deleteClient" />
 			</tbody>
 		</table>
+		<NcNoteCard v-if="showSecretWarning"
+			type="warning">
+			{{ t('oauth2', 'Make sure you store the secret key, it cannot be recovered.') }}
+		</NcNoteCard>
 
 		<br>
 		<h3>{{ t('oauth2', 'Add client') }}</h3>
@@ -83,6 +70,7 @@ import { generateUrl } from '@nextcloud/router'
 import { getCapabilities } from '@nextcloud/capabilities'
 import NcSettingsSection from '@nextcloud/vue/dist/Components/NcSettingsSection.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
 import { loadState } from '@nextcloud/initial-state'
 import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
 
@@ -93,6 +81,7 @@ export default {
 		NcSettingsSection,
 		NcButton,
 		NcTextField,
+		NcNoteCard,
 	},
 	props: {
 		clients: {
@@ -109,6 +98,7 @@ export default {
 				error: false,
 			},
 			oauthDocLink: loadState('oauth2', 'oauth2-doc-link'),
+			showSecretWarning: false,
 		}
 	},
 	computed: {
@@ -119,7 +109,7 @@ export default {
 	methods: {
 		deleteClient(id) {
 			axios.delete(generateUrl('apps/oauth2/clients/{id}', { id }))
-				.then((response) => {
+				.then(() => {
 					// eslint-disable-next-line vue/no-mutating-props
 					this.clients = this.clients.filter(client => client.id !== id)
 				})
@@ -136,6 +126,7 @@ export default {
 			).then(response => {
 				// eslint-disable-next-line vue/no-mutating-props
 				this.clients.push(response.data)
+				this.showSecretWarning = true
 
 				this.newClient.name = ''
 				this.newClient.redirectUri = ''
@@ -163,6 +154,6 @@ export default {
 	}
 	.oauth2-form--input {
 		max-width: 200px;
-		margin-right: 10px;
+		margin-inline-end: 10px;
 	}
 </style>

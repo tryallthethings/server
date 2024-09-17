@@ -1,37 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Ari Selseng <ari@selseng.net>
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Jagszent <daniel@jagszent.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Martin Mattel <martin.mattel@diemattels.at>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Owen Winkler <a_github@midnightcircus.com>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Files\Cache;
 
@@ -39,9 +11,11 @@ use Doctrine\DBAL\Exception;
 use OC\Files\Storage\Wrapper\Encryption;
 use OC\Files\Storage\Wrapper\Jail;
 use OC\Hooks\BasicEmitter;
+use OC\SystemConfig;
 use OCP\Files\Cache\IScanner;
 use OCP\Files\ForbiddenException;
 use OCP\Files\NotFoundException;
+use OCP\Files\Storage\ILockingStorage;
 use OCP\Files\Storage\IReliableEtagStorage;
 use OCP\IDBConnection;
 use OCP\Lock\ILockingProvider;
@@ -95,7 +69,10 @@ class Scanner extends BasicEmitter implements IScanner {
 		$this->storage = $storage;
 		$this->storageId = $this->storage->getId();
 		$this->cache = $storage->getCache();
-		$this->cacheActive = !\OC::$server->getConfig()->getSystemValueBool('filesystem_cache_readonly', false);
+		/** @var SystemConfig $config */
+		$config = \OC::$server->get(SystemConfig::class);
+		$this->cacheActive = !$config->getValue('filesystem_cache_readonly', false);
+		$this->useTransactions = !$config->getValue('filescanner_no_transactions', false);
 		$this->lockingProvider = \OC::$server->get(ILockingProvider::class);
 		$this->connection = \OC::$server->get(IDBConnection::class);
 	}
@@ -149,7 +126,7 @@ class Scanner extends BasicEmitter implements IScanner {
 		if (!self::isPartialFile($file)) {
 			// acquire a lock
 			if ($lock) {
-				if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+				if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 					$this->storage->acquireLock($file, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 				}
 			}
@@ -158,7 +135,7 @@ class Scanner extends BasicEmitter implements IScanner {
 				$data = $data ?? $this->getData($file);
 			} catch (ForbiddenException $e) {
 				if ($lock) {
-					if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+					if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 						$this->storage->releaseLock($file, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 					}
 				}
@@ -221,8 +198,9 @@ class Scanner extends BasicEmitter implements IScanner {
 						}
 
 						// Only update metadata that has changed
-						$newData = array_diff_assoc($data, $cacheData->getData());
-
+						// i.e. get all the values in $data that are not present in the cache already
+						$newData = $this->array_diff_assoc_multi($data, $cacheData->getData());
+						
 						// make it known to the caller that etag has been changed and needs propagation
 						if (isset($newData['etag'])) {
 							$data['etag_changed'] = true;
@@ -256,7 +234,7 @@ class Scanner extends BasicEmitter implements IScanner {
 				}
 			} catch (\Exception $e) {
 				if ($lock) {
-					if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+					if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 						$this->storage->releaseLock($file, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 					}
 				}
@@ -265,7 +243,7 @@ class Scanner extends BasicEmitter implements IScanner {
 
 			// release the acquired lock
 			if ($lock) {
-				if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+				if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 					$this->storage->releaseLock($file, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 				}
 			}
@@ -342,7 +320,7 @@ class Scanner extends BasicEmitter implements IScanner {
 			$reuse = ($recursive === self::SCAN_SHALLOW) ? self::REUSE_ETAG | self::REUSE_SIZE : self::REUSE_ETAG;
 		}
 		if ($lock) {
-			if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+			if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 				$this->storage->acquireLock('scanner::' . $path, ILockingProvider::LOCK_EXCLUSIVE, $this->lockingProvider);
 				$this->storage->acquireLock($path, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 			}
@@ -360,13 +338,57 @@ class Scanner extends BasicEmitter implements IScanner {
 			}
 		} finally {
 			if ($lock) {
-				if ($this->storage->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
+				if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
 					$this->storage->releaseLock($path, ILockingProvider::LOCK_SHARED, $this->lockingProvider);
 					$this->storage->releaseLock('scanner::' . $path, ILockingProvider::LOCK_EXCLUSIVE, $this->lockingProvider);
 				}
 			}
 		}
 		return $data;
+	}
+
+	/**
+	 * Compares $array1 against $array2 and returns all the values in $array1 that are not in $array2
+	 * Note this is a one-way check - i.e. we don't care about things that are in $array2 that aren't in $array1
+	 *
+	 * Supports multi-dimensional arrays
+	 * Also checks keys/indexes
+	 * Comparisons are strict just like array_diff_assoc
+	 * Order of keys/values does not matter
+	 *
+	 * @param array $array1
+	 * @param array $array2
+	 * @return array with the differences between $array1 and $array1
+	 * @throws \InvalidArgumentException if $array1 isn't an actual array
+	 *
+	 */
+	protected function array_diff_assoc_multi(array $array1, array $array2) {
+		
+		$result = [];
+
+		foreach ($array1 as $key => $value) {
+		
+			// if $array2 doesn't have the same key, that's a result
+			if (!array_key_exists($key, $array2)) {
+				$result[$key] = $value;
+				continue;
+			}
+		
+			// if $array2's value for the same key is different, that's a result
+			if ($array2[$key] !== $value && !is_array($value)) {
+				$result[$key] = $value;
+				continue;
+			}
+		
+			if (is_array($value)) {
+				$nestedDiff = $this->array_diff_assoc_multi($value, $array2[$key]);
+				if (!empty($nestedDiff)) {
+					$result[$key] = $nestedDiff;
+					continue;
+				}
+			}
+		}
+		return $result;
 	}
 
 	/**

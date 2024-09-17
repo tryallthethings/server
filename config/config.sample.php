@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+/**
  * This configuration file is only provided to document the different
  * configuration options and their usage.
  *
@@ -112,9 +118,9 @@ $CONFIG = [
 
 /**
  * Your host server name, for example ``localhost``, ``hostname``,
- * ``hostname.example.com``, or the IP address. To specify a port use
- * ``hostname:####``; to specify a Unix socket use
- * ``/path/to/directory/containing/socket`` e.g. ``/run/postgresql/``.
+ * ``hostname.example.com``, or the IP address.
+ * To specify a port use ``hostname:####``, for IPv6 addresses use the URI notation ``[ip]:port``.
+ * To specify a Unix socket use ``/path/to/directory/containing/socket``, e.g. ``/run/postgresql/``.
  */
 'dbhost' => '',
 
@@ -158,6 +164,13 @@ $CONFIG = [
 	['user' => 'nextcloud', 'password' => 'password1', 'host' => 'replica1', 'dbname' => ''],
 	['user' => 'nextcloud', 'password' => 'password2', 'host' => 'replica2', 'dbname' => ''],
 ],
+
+/**
+ * Add request id to the database query in a comment.
+ *
+ * This can be enabled to assist in mapping database logs to Nextcloud logs.
+ */
+'db.log_request_id' => false,
 
 /**
  * Indicates whether the Nextcloud instance was installed successfully; ``true``
@@ -214,6 +227,15 @@ $CONFIG = [
  * Defaults to ``en``
  */
 'default_locale' => 'en_US',
+
+/**
+ * With this setting is possible to reduce the languages available in the
+ * language chooser. The languages have to be set as array values using ISO_639-1
+ * language codes such as ``en`` for English, ``de`` for German etc.
+ *
+ * For example: Set to ['de', 'fr'] to only allow German and French languages.
+ */
+'reduce_to_languages' => [],
 
 /**
  * This sets the default region for phone numbers on your Nextcloud server,
@@ -363,7 +385,7 @@ $CONFIG = [
  * Tokens are still checked every 5 minutes for validity
  * max value: 300
  *
- * Defaults to ``300``
+ * Defaults to ``60``
  */
 'token_auth_activity_update' => 60,
 
@@ -471,6 +493,8 @@ $CONFIG = [
 
 /**
  * Enable SMTP class debugging.
+ * NOTE: ``loglevel`` will likely need to be adjusted too. See docs:
+ *   https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/email_configuration.html#enabling-debug-mode
  *
  * Defaults to ``false``
  */
@@ -721,6 +745,11 @@ $CONFIG = [
 /**
  * If the trash bin app is enabled (default), this setting defines the policy
  * for when files and folders in the trash bin will be permanently deleted.
+ *
+ * If the user quota limit is exceeded due to deleted files in the trash bin,
+ * retention settings will be ignored and files will be cleaned up until
+ * the quota requirements are met.
+ *
  * The app allows for two settings, a minimum time for trash bin retention,
  * and a maximum time for trash bin retention.
  *
@@ -1035,6 +1064,9 @@ $CONFIG = [
  *                this condition is met
  *  - ``apps``:   if the log message is invoked by one of the specified apps,
  *                this condition is met
+ *  - ``matches``: if all the conditions inside a group match,
+ *                this condition is met. This allows to log only entries to an app
+ *                by a few users.
  *
  * Defaults to an empty array.
  */
@@ -1042,6 +1074,15 @@ $CONFIG = [
 	'shared_secret' => '57b58edb6637fe3059b3595cf9c41b9',
 	'users' => ['sample-user'],
 	'apps' => ['files'],
+	'matches' => [
+		[
+			'shared_secret' => '57b58edb6637fe3059b3595cf9c41b9',
+			'users' => ['sample-user'],
+			'apps' => ['files'],
+			'loglevel' => 1,
+			'message' => 'contains substring'
+		],
+	],
 ],
 
 /**
@@ -1112,6 +1153,7 @@ $CONFIG = [
  * - Android client: ``https://play.google.com/store/apps/details?id=com.nextcloud.client``
  * - iOS client: ``https://itunes.apple.com/us/app/nextcloud/id1125420102?mt=8``
  * - iOS client app id: ``1125420102``
+ * - F-Droid client: ``https://f-droid.org/packages/com.nextcloud.client/``
  */
 'customclient_desktop' =>
 	'https://nextcloud.com/install/#install-clients',
@@ -1121,6 +1163,8 @@ $CONFIG = [
 	'https://itunes.apple.com/us/app/nextcloud/id1125420102?mt=8',
 'customclient_ios_appid' =>
 		'1125420102',
+'customclient_fdroid' =>
+	'https://f-droid.org/packages/com.nextcloud.client/',
 /**
  * Apps
  *
@@ -1128,9 +1172,9 @@ $CONFIG = [
  */
 
 /**
- * Set the default app to open on login. Use the app names as they appear in the
- * URL after clicking them in the Apps menu, such as documents, calendar, and
- * gallery. You can use a comma-separated list of app names, so if the first
+ * Set the default app to open on login. The entry IDs can be retrieved from
+ * the Navigations OCS API endpoint: https://docs.nextcloud.com/server/latest/develper_manual/_static/openapi.html#/operations/core-navigation-get-apps-navigation.
+ * You can use a comma-separated list of app names, so if the first
  * app is not enabled for a user then Nextcloud will try the second one, and so
  * on. If no enabled apps are found it defaults to the dashboard app.
  *
@@ -1268,13 +1312,19 @@ $CONFIG = [
 /**
  * custom path for ffmpeg binary
  *
- * Defaults to ``null`` and falls back to searching ``avconv`` and ``ffmpeg`` in the configured ``PATH`` environment
+ * Defaults to ``null`` and falls back to searching ``avconv`` and ``ffmpeg``
+ * in the configured ``PATH`` environment
  */
 'preview_ffmpeg_path' => '/usr/bin/ffmpeg',
 
 /**
  * Set the URL of the Imaginary service to send image previews to.
- * Also requires the ``OC\Preview\Imaginary`` provider to be enabled.
+ * Also requires the ``OC\Preview\Imaginary`` provider to be enabled in the
+ * ``enabledPreviewProviders`` array, to create previews for these mimetypes: bmp,
+ * x-bitmap, png, jpeg, gif, heic, heif, svg+xml, tiff, webp and illustrator.
+ *
+ * If you want Imaginary to also create preview images from PDF Documents, you
+ * have to add the ``OC\Preview\ImaginaryPDF`` provider as well.
  *
  * See https://github.com/h2non/imaginary
  */
@@ -1334,6 +1384,15 @@ $CONFIG = [
 ],
 
 /**
+ * Maximum file size for metadata generation.
+ * If a file exceeds this size, metadata generation will be skipped.
+ * Note: memory equivalent to this size will be used for metadata generation.
+ *
+ * Default: 256 megabytes.
+ */
+'metadata_max_filesize' => 256,
+
+/**
  * LDAP
  *
  * Global settings used by LDAP User and Group Backend
@@ -1353,6 +1412,7 @@ $CONFIG = [
  * Sort groups in the user settings by name instead of the user count
  *
  * By enabling this the user count beside the group name is disabled as well.
+ * @deprecated since Nextcloud 29 - Use the frontend instead or set the app config value `group.sortBy` for `core` to `2`
  */
 'sort_groups_by_name' => false,
 
@@ -1953,26 +2013,54 @@ $CONFIG = [
 'updatedirectory' => '',
 
 /**
- * Blacklist a specific file or files and disallow the upload of files
- * with this name. ``.htaccess`` is blocked by default.
+ * Block a specific file or files and disallow the upload of files with this name.
+ * This blocks any access to those files (read and write).
+ * ``.htaccess`` is blocked by default.
+ *
  * WARNING: USE THIS ONLY IF YOU KNOW WHAT YOU ARE DOING.
+ *
+ * Note that this list is case-insensitive.
  *
  * Defaults to ``array('.htaccess')``
  */
-'blacklisted_files' => ['.htaccess'],
+'forbidden_filenames' => ['.htaccess'],
 
 /**
- * Blacklist characters from being used in filenames. This is useful if you
- * have a filesystem or OS which does not support certain characters like windows.
- * 
- * The '/' and '\' characters are always forbidden.
+ * Disallow the upload of files with specific basenames.
+ * Matching existing files can no longer be updated and in matching folders no files can be created anymore.
  *
- * Example for windows systems: ``array('?', '<', '>', ':', '*', '|', '"', chr(0), "\n", "\r")``
+ * The basename is the name of the file without the extension,
+ * e.g. for "archive.tar.gz" the basename would be "archive".
+ *
+ * Note that this list is case-insensitive.
+ *
+ * Defaults to ``array()``
+ */
+'forbidden_filename_basenames' => [],
+
+/**
+ * Block characters from being used in filenames. This is useful if you
+ * have a filesystem or OS which does not support certain characters like windows.
+ * Matching existing files can no longer be updated and in matching folders no files can be created anymore.
+ *
+ * The '/' and '\' characters are always forbidden, as well as all characters in the ASCII range [0-31].
+ *
+ * Example for windows systems: ``array('?', '<', '>', ':', '*', '|', '"')``
  * see https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
  *
  * Defaults to ``array()``
  */
-'forbidden_chars' => [],
+'forbidden_filename_characters' => [],
+
+/**
+ * Deny extensions from being used for filenames.
+ * Matching existing files can no longer be updated and in matching folders no files can be created anymore.
+ *
+ * The '.part' extension is always forbidden, as this is used internally by Nextcloud.
+ *
+ * Defaults to ``array('.filepart', '.part')``
+ */
+'forbidden_filename_extensions' => ['.part', '.filepart'],
 
 /**
  * If you are applying a theme to Nextcloud, enter the name of the theme here.
@@ -2161,6 +2249,16 @@ $CONFIG = [
 'forwarded_for_headers' => ['HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR'],
 
 /**
+ * List of trusted IP ranges for admin actions
+ *
+ * If this list is non-empty, all admin actions must be triggered from
+ * IP addresses inside theses ranges.
+ *
+ * Defaults to an empty array.
+ */
+'allowed_admin_ranges' => ['192.0.2.42/32', '233.252.0.0/24', '2001:db8::13:37/64'],
+
+/**
  * max file size for animating gifs on public-sharing-site.
  * If the gif is bigger, it'll show a static preview
  *
@@ -2226,6 +2324,11 @@ $CONFIG = [
  * Allows to modify the cli-upgrade link in order to link to a different documentation
  */
 'upgrade.cli-upgrade-link' => '',
+
+/**
+ * Allows to modify the exception server logs documentation link in order to link to a different documentation
+ */
+'documentation_url.server_logs' => '',
 
 /**
  * Set this Nextcloud instance to debugging mode
@@ -2306,6 +2409,14 @@ $CONFIG = [
  */
 
 'login_form_autocomplete' => true,
+
+/**
+ * Timeout for the login form, after this time the login form is reset.
+ * This prevents password leaks on public devices if the user forgots to clear the form.
+ *
+ * Default is 5 minutes (300 seconds), a value of 0 means no timeout.
+ */
+'login_form_timeout' => 300,
 
 /**
  * If your user is using an outdated or unsupported browser, a warning will be shown

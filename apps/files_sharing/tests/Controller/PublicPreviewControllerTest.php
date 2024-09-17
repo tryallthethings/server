@@ -1,26 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\Files_Sharing\Tests\Controller;
 
@@ -76,28 +57,28 @@ class PublicPreviewControllerTest extends TestCase {
 		);
 	}
 
-	public function testInvalidToken() {
+	public function testInvalidToken(): void {
 		$res = $this->controller->getPreview('', 'file', 10, 10, '');
 		$expected = new DataResponse([], Http::STATUS_BAD_REQUEST);
 
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testInvalidWidth() {
+	public function testInvalidWidth(): void {
 		$res = $this->controller->getPreview('token', 'file', 0);
 		$expected = new DataResponse([], Http::STATUS_BAD_REQUEST);
 
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testInvalidHeight() {
+	public function testInvalidHeight(): void {
 		$res = $this->controller->getPreview('token', 'file', 10, 0);
 		$expected = new DataResponse([], Http::STATUS_BAD_REQUEST);
 
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testInvalidShare() {
+	public function testInvalidShare(): void {
 		$this->shareManager->method('getShareByToken')
 			->with($this->equalTo('token'))
 			->willThrowException(new ShareNotFound());
@@ -108,7 +89,7 @@ class PublicPreviewControllerTest extends TestCase {
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testShareNotAccessable() {
+	public function testShareNotAccessable(): void {
 		$share = $this->createMock(IShare::class);
 		$this->shareManager->method('getShareByToken')
 			->with($this->equalTo('token'))
@@ -123,7 +104,7 @@ class PublicPreviewControllerTest extends TestCase {
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testPreviewFile() {
+	public function testPreviewFile(): void {
 		$share = $this->createMock(IShare::class);
 		$this->shareManager->method('getShareByToken')
 			->with($this->equalTo('token'))
@@ -152,7 +133,7 @@ class PublicPreviewControllerTest extends TestCase {
 		$this->assertEquals($expected, $res);
 	}
 
-	public function testPreviewFolderInvalidFile() {
+	public function testPreviewFolderInvalidFile(): void {
 		$share = $this->createMock(IShare::class);
 		$this->shareManager->method('getShareByToken')
 			->with($this->equalTo('token'))
@@ -175,7 +156,7 @@ class PublicPreviewControllerTest extends TestCase {
 	}
 
 
-	public function testPreviewFolderValidFile() {
+	public function testPreviewFolderValidFile(): void {
 		$share = $this->createMock(IShare::class);
 		$this->shareManager->method('getShareByToken')
 			->with($this->equalTo('token'))

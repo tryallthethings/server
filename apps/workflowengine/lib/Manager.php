@@ -1,31 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Morris Jobke <hey@morrisjobke.de>
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author blizzz <blizzz@arthur-schiwon.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\WorkflowEngine;
 
@@ -175,7 +151,7 @@ class Manager implements IManager {
 		while ($row = $result->fetch()) {
 			$scope = new ScopeContext($row['type'], $row['value']);
 
-			if (!$operation->isAvailableForScope((int) $row['type'])) {
+			if (!$operation->isAvailableForScope((int)$row['type'])) {
 				continue;
 			}
 
@@ -215,7 +191,7 @@ class Manager implements IManager {
 				continue;
 			}
 
-			if (!$operation->isAvailableForScope((int) $row['scope_type'])) {
+			if (!$operation->isAvailableForScope((int)$row['scope_type'])) {
 				continue;
 			}
 
@@ -288,7 +264,7 @@ class Manager implements IManager {
 	 * @param string $operation
 	 * @return array The added operation
 	 * @throws \UnexpectedValueException
-	 * @throw Exception
+	 * @throws Exception
 	 */
 	public function addOperation(
 		string $class,
@@ -564,8 +540,8 @@ class Manager implements IManager {
 		$result = $query->execute();
 
 		while ($row = $result->fetch()) {
-			$this->checks[(int) $row['id']] = $row;
-			$checks[(int) $row['id']] = $row;
+			$this->checks[(int)$row['id']] = $row;
+			$checks[(int)$row['id']] = $row;
 		}
 		$result->closeCursor();
 
@@ -596,7 +572,7 @@ class Manager implements IManager {
 
 		if ($row = $result->fetch()) {
 			$result->closeCursor();
-			return (int) $row['id'];
+			return (int)$row['id'];
 		}
 
 		$query = $this->connection->getQueryBuilder();

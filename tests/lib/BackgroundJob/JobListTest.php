@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright (c) 2014 Robin Appelman <icewind@owncloud.com>
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\BackgroundJob;
@@ -88,7 +87,7 @@ class JobListTest extends TestCase {
 	 * @dataProvider argumentProvider
 	 * @param $argument
 	 */
-	public function testAddRemove($argument) {
+	public function testAddRemove($argument): void {
 		$existingJobs = $this->getAllSorted();
 		$job = new TestJob();
 		$this->instance->add($job, $argument);
@@ -110,7 +109,7 @@ class JobListTest extends TestCase {
 	 * @dataProvider argumentProvider
 	 * @param $argument
 	 */
-	public function testRemoveDifferentArgument($argument) {
+	public function testRemoveDifferentArgument($argument): void {
 		$existingJobs = $this->getAllSorted();
 		$job = new TestJob();
 		$this->instance->add($job, $argument);
@@ -131,7 +130,7 @@ class JobListTest extends TestCase {
 	 * @dataProvider argumentProvider
 	 * @param $argument
 	 */
-	public function testHas($argument) {
+	public function testHas($argument): void {
 		$job = new TestJob();
 		$this->assertFalse($this->instance->has($job, $argument));
 		$this->instance->add($job, $argument);
@@ -147,7 +146,7 @@ class JobListTest extends TestCase {
 	 * @dataProvider argumentProvider
 	 * @param $argument
 	 */
-	public function testHasDifferentArgument($argument) {
+	public function testHasDifferentArgument($argument): void {
 		$job = new TestJob();
 		$this->instance->add($job, $argument);
 
@@ -171,7 +170,7 @@ class JobListTest extends TestCase {
 		$query->execute();
 	}
 
-	public function testGetNext() {
+	public function testGetNext(): void {
 		$job = new TestJob();
 		$this->createTempJob(get_class($job), 1, 0, 12345);
 		$this->createTempJob(get_class($job), 2, 0, 12346);
@@ -187,7 +186,7 @@ class JobListTest extends TestCase {
 		$this->assertEquals($savedJob1, $nextJob);
 	}
 
-	public function testGetNextSkipReserved() {
+	public function testGetNextSkipReserved(): void {
 		$job = new TestJob();
 		$this->createTempJob(get_class($job), 1, 123456789, 12345);
 		$this->createTempJob(get_class($job), 2, 0, 12346);
@@ -201,7 +200,7 @@ class JobListTest extends TestCase {
 		$this->assertEquals(2, $nextJob->getArgument());
 	}
 
-	public function testGetNextSkipNonExisting() {
+	public function testGetNextSkipNonExisting(): void {
 		$job = new TestJob();
 		$this->createTempJob('\OC\Non\Existing\Class', 1, 0, 12345);
 		$this->createTempJob(get_class($job), 2, 0, 12346);
@@ -219,7 +218,7 @@ class JobListTest extends TestCase {
 	 * @dataProvider argumentProvider
 	 * @param $argument
 	 */
-	public function testGetById($argument) {
+	public function testGetById($argument): void {
 		$job = new TestJob();
 		$this->instance->add($job, $argument);
 
@@ -230,7 +229,7 @@ class JobListTest extends TestCase {
 		$this->assertEquals($addedJob, $this->instance->getById($addedJob->getId()));
 	}
 
-	public function testSetLastRun() {
+	public function testSetLastRun(): void {
 		$job = new TestJob();
 		$this->instance->add($job);
 
@@ -248,7 +247,7 @@ class JobListTest extends TestCase {
 		$this->assertLessThanOrEqual($timeEnd, $addedJob->getLastRun());
 	}
 
-	public function testHasReservedJobs() {
+	public function testHasReservedJobs(): void {
 		$this->clearJobsList();
 
 		$this->timeFactory->expects($this->atLeastOnce())
@@ -279,7 +278,7 @@ class JobListTest extends TestCase {
 		$this->assertTrue($this->instance->hasReservedJob(TestJob::class));
 	}
 
-	public function testHasReservedJobsAndParallelAwareJob() {
+	public function testHasReservedJobsAndParallelAwareJob(): void {
 		$this->clearJobsList();
 
 		$this->timeFactory->expects($this->atLeastOnce())

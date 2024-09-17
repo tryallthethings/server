@@ -1,32 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <nextcloud@tcit.fr>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing\Tests\Controller;
 
@@ -63,7 +39,7 @@ class ShareesAPIControllerTest extends TestCase {
 	/** @var IManager|MockObject */
 	protected $shareManager;
 
-	/** @var  ISearch|MockObject */
+	/** @var ISearch|MockObject */
 	protected $collaboratorSearch;
 
 	/** @var IConfig|MockObject */
@@ -247,7 +223,7 @@ class ShareesAPIControllerTest extends TestCase {
 		bool $shareWithGroupOnly,
 		bool $shareeEnumeration,
 		bool $allowGroupSharing,
-	) {
+	): void {
 		$search = $getData['search'] ?? '';
 		$itemType = $getData['itemType'] ?? 'irrelevant';
 		$page = $getData['page'] ?? 1;
@@ -357,7 +333,7 @@ class ShareesAPIControllerTest extends TestCase {
 	 * @param array $getData
 	 * @param string $message
 	 */
-	public function testSearchInvalid($getData, $message) {
+	public function testSearchInvalid($getData, $message): void {
 		$page = $getData['page'] ?? 1;
 		$perPage = $getData['perPage'] ?? 200;
 
@@ -415,11 +391,11 @@ class ShareesAPIControllerTest extends TestCase {
 	 * @param string $itemType
 	 * @param bool $expected
 	 */
-	public function testIsRemoteSharingAllowed($itemType, $expected) {
+	public function testIsRemoteSharingAllowed($itemType, $expected): void {
 		$this->assertSame($expected, $this->invokePrivate($this->sharees, 'isRemoteSharingAllowed', [$itemType]));
 	}
 
-	public function testSearchSharingDisabled() {
+	public function testSearchSharingDisabled(): void {
 		$this->shareManager->expects($this->once())
 			->method('sharingDisabledForUser')
 			->with($this->uid)
@@ -436,7 +412,7 @@ class ShareesAPIControllerTest extends TestCase {
 		$this->assertInstanceOf(DataResponse::class, $this->sharees->search('', null, 1, 10, [], false));
 	}
 
-	public function testSearchNoItemType() {
+	public function testSearchNoItemType(): void {
 		$this->expectException(\OCP\AppFramework\OCS\OCSBadRequestException::class);
 		$this->expectExceptionMessage('Missing itemType');
 
@@ -458,7 +434,7 @@ class ShareesAPIControllerTest extends TestCase {
 	 * @param array $params
 	 * @param array $expected
 	 */
-	public function testGetPaginationLink($page, $scriptName, $params, $expected) {
+	public function testGetPaginationLink($page, $scriptName, $params, $expected): void {
 		$this->request->expects($this->once())
 			->method('getScriptName')
 			->willReturn($scriptName);
@@ -479,7 +455,7 @@ class ShareesAPIControllerTest extends TestCase {
 	 * @param string $scriptName
 	 * @param bool $expected
 	 */
-	public function testIsV2($scriptName, $expected) {
+	public function testIsV2($scriptName, $expected): void {
 		$this->request->expects($this->once())
 			->method('getScriptName')
 			->willReturn($scriptName);

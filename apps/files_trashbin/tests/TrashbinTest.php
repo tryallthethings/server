@@ -1,33 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Tobia De Koninck <tobia@ledfan.be>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 use OC\AppFramework\Bootstrap\BootContext;
 use OC\AppFramework\DependencyInjection\DIContainer;
@@ -41,8 +16,8 @@ use OCP\Share\IShare;
  * @group DB
  */
 class TrashbinTest extends \Test\TestCase {
-	public const TEST_TRASHBIN_USER1 = "test-trashbin-user1";
-	public const TEST_TRASHBIN_USER2 = "test-trashbin-user2";
+	public const TEST_TRASHBIN_USER1 = 'test-trashbin-user1';
+	public const TEST_TRASHBIN_USER2 = 'test-trashbin-user2';
 
 	private $trashRoot1;
 	private $trashRoot2;
@@ -171,7 +146,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * test expiration of files older then the max storage time defined for the trash
 	 */
-	public function testExpireOldFiles() {
+	public function testExpireOldFiles(): void {
 
 		/** @var \OCP\AppFramework\Utility\ITimeFactory $time */
 		$time = \OC::$server->query(\OCP\AppFramework\Utility\ITimeFactory::class);
@@ -223,9 +198,9 @@ class TrashbinTest extends \Test\TestCase {
 	 * the owner of the file and the one from the user who deleted the file get expired
 	 * correctly
 	 */
-	public function testExpireOldFilesShared() {
+	public function testExpireOldFilesShared(): void {
 		$currentTime = time();
-		$folder = "trashTest-" . $currentTime . '/';
+		$folder = 'trashTest-' . $currentTime . '/';
 		$expiredDate = $currentTime - 3 * 24 * 60 * 60;
 
 		// create some files
@@ -260,7 +235,7 @@ class TrashbinTest extends \Test\TestCase {
 		// login as user2
 		self::loginHelper(self::TEST_TRASHBIN_USER2);
 
-		$this->assertTrue(\OC\Files\Filesystem::file_exists($folder . "user1-4.txt"));
+		$this->assertTrue(\OC\Files\Filesystem::file_exists($folder . 'user1-4.txt'));
 
 		// create some files
 		\OC\Files\Filesystem::file_put_contents('user2-1.txt', 'file1');
@@ -341,7 +316,7 @@ class TrashbinTest extends \Test\TestCase {
 	 * test expiration of old files in the trash bin until the max size
 	 * of the trash bin is met again
 	 */
-	public function testExpireOldFilesUtilLimitsAreMet() {
+	public function testExpireOldFilesUtilLimitsAreMet(): void {
 
 		// create some files
 		\OC\Files\Filesystem::file_put_contents('file1.txt', 'file1');
@@ -374,7 +349,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * Test restoring a file
 	 */
-	public function testRestoreFileInRoot() {
+	public function testRestoreFileInRoot(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$file = $userFolder->newFile('file1.txt');
 		$file->putContent('foo');
@@ -406,7 +381,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * Test restoring a file in subfolder
 	 */
-	public function testRestoreFileInSubfolder() {
+	public function testRestoreFileInSubfolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');
@@ -439,7 +414,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * Test restoring a folder
 	 */
-	public function testRestoreFolder() {
+	public function testRestoreFolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');
@@ -472,7 +447,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * Test restoring a file from inside a trashed folder
 	 */
-	public function testRestoreFileFromTrashedSubfolder() {
+	public function testRestoreFileFromTrashedSubfolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');
@@ -506,7 +481,7 @@ class TrashbinTest extends \Test\TestCase {
 	 * Test restoring a file whenever the source folder was removed.
 	 * The file should then land in the root.
 	 */
-	public function testRestoreFileWithMissingSourceFolder() {
+	public function testRestoreFileWithMissingSourceFolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');
@@ -543,7 +518,7 @@ class TrashbinTest extends \Test\TestCase {
 	 * Test restoring a file in the root folder whenever there is another file
 	 * with the same name in the root folder
 	 */
-	public function testRestoreFileDoesNotOverwriteExistingInRoot() {
+	public function testRestoreFileDoesNotOverwriteExistingInRoot(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$file = $userFolder->newFile('file1.txt');
 		$file->putContent('foo');
@@ -583,7 +558,7 @@ class TrashbinTest extends \Test\TestCase {
 	 * Test restoring a file whenever there is another file
 	 * with the same name in the source folder
 	 */
-	public function testRestoreFileDoesNotOverwriteExistingInSubfolder() {
+	public function testRestoreFileDoesNotOverwriteExistingInSubfolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');
@@ -623,7 +598,7 @@ class TrashbinTest extends \Test\TestCase {
 	/**
 	 * Test restoring a non-existing file from trashbin, returns false
 	 */
-	public function testRestoreUnexistingFile() {
+	public function testRestoreUnexistingFile(): void {
 		$this->assertFalse(
 			OCA\Files_Trashbin\Trashbin::restore(
 				'unexist.txt.d123456',
@@ -637,7 +612,7 @@ class TrashbinTest extends \Test\TestCase {
 	 * Test restoring a file into a read-only folder, will restore
 	 * the file to root instead
 	 */
-	public function testRestoreFileIntoReadOnlySourceFolder() {
+	public function testRestoreFileIntoReadOnlySourceFolder(): void {
 		$userFolder = \OC::$server->getUserFolder();
 		$folder = $userFolder->newFolder('folder');
 		$file = $folder->newFile('file1.txt');

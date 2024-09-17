@@ -1,31 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing\Tests;
 
@@ -211,7 +188,7 @@ class CacheTest extends TestCase {
 	 * we cannot use a dataProvider because that would cause the stray hook detection to remove the hooks
 	 * that were added in setUpBeforeClass.
 	 */
-	public function testSearch() {
+	public function testSearch(): void {
 		foreach ($this->searchDataProvider() as $data) {
 			[$pattern, $expectedFiles] = $data;
 
@@ -223,7 +200,7 @@ class CacheTest extends TestCase {
 	/**
 	 * Test searching by mime type
 	 */
-	public function testSearchByMime() {
+	public function testSearchByMime(): void {
 		$results = $this->sharedStorage->getCache()->searchByMime('text');
 		$check = [
 			[
@@ -242,7 +219,7 @@ class CacheTest extends TestCase {
 		$this->verifyFiles($check, $results);
 	}
 
-	public function testGetFolderContentsInRoot() {
+	public function testGetFolderContentsInRoot(): void {
 		$results = $this->user2View->getDirectoryContent('/');
 		$results = (array_filter($results, function ($file) {
 			return $file->getName() !== 'welcome.txt';
@@ -272,7 +249,7 @@ class CacheTest extends TestCase {
 		);
 	}
 
-	public function testGetFolderContentsInSubdir() {
+	public function testGetFolderContentsInSubdir(): void {
 		$results = $this->user2View->getDirectoryContent('/shareddir');
 
 		$this->verifyFiles(
@@ -310,7 +287,7 @@ class CacheTest extends TestCase {
 	 *
 	 * https://github.com/nextcloud/server/issues/39879
 	 */
-	public function testShareRenameOriginalFileInRecentResults() {
+	public function testShareRenameOriginalFileInRecentResults(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 
 		$rootFolder = \OC::$server->getUserFolder(self::TEST_FILES_SHARING_API_USER1);
@@ -339,7 +316,7 @@ class CacheTest extends TestCase {
 		}, $recents));
 	}
 
-	public function testGetFolderContentsWhenSubSubdirShared() {
+	public function testGetFolderContentsWhenSubSubdirShared(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 
 		$rootFolder = \OC::$server->getUserFolder(self::TEST_FILES_SHARING_API_USER1);
@@ -423,7 +400,7 @@ class CacheTest extends TestCase {
 		}
 	}
 
-	public function testGetPathByIdDirectShare() {
+	public function testGetPathByIdDirectShare(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 		\OC\Files\Filesystem::file_put_contents('test.txt', 'foo');
 		$info = \OC\Files\Filesystem::getFileInfo('test.txt');
@@ -453,7 +430,7 @@ class CacheTest extends TestCase {
 		$this->assertEquals('', $sharedCache->getPathById($info->getId()));
 	}
 
-	public function testGetPathByIdShareSubFolder() {
+	public function testGetPathByIdShareSubFolder(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 		\OC\Files\Filesystem::mkdir('foo');
 		\OC\Files\Filesystem::mkdir('foo/bar');
@@ -486,7 +463,7 @@ class CacheTest extends TestCase {
 		$this->assertEquals('bar/test.txt', $sharedCache->getPathById($fileInfo->getId()));
 	}
 
-	public function testNumericStorageId() {
+	public function testNumericStorageId(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 		\OC\Files\Filesystem::mkdir('foo');
 
@@ -513,7 +490,7 @@ class CacheTest extends TestCase {
 		$this->assertEquals($sourceStorage->getCache()->getNumericStorageId(), $sharedStorage->getCache()->getNumericStorageId());
 	}
 
-	public function testShareJailedStorage() {
+	public function testShareJailedStorage(): void {
 		$sourceStorage = new Temporary();
 		$sourceStorage->mkdir('jail');
 		$sourceStorage->mkdir('jail/sub');
@@ -552,7 +529,7 @@ class CacheTest extends TestCase {
 		$this->assertTrue($sourceStorage->getCache()->inCache('jail/sub/bar.txt'));
 	}
 
-	public function testSearchShareJailedStorage() {
+	public function testSearchShareJailedStorage(): void {
 		$sourceStorage = new Temporary();
 		$sourceStorage->mkdir('jail');
 		$sourceStorage->mkdir('jail/sub');
@@ -584,7 +561,7 @@ class CacheTest extends TestCase {
 		/** @var SharedStorage $sharedStorage */
 		[$sharedStorage] = \OC\Files\Filesystem::resolvePath('/' . self::TEST_FILES_SHARING_API_USER2 . '/files/sub');
 
-		$results = $sharedStorage->getCache()->search("foo.txt");
+		$results = $sharedStorage->getCache()->search('foo.txt');
 		$this->assertCount(1, $results);
 	}
 }

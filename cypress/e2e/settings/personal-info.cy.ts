@@ -1,23 +1,6 @@
 /**
- * @copyright Copyright (c) 2024 Ferdinand Thiessen <opensource@fthiessen.de>
- *
- * @author Ferdinand Thiessen <opensource@fthiessen.de>
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 import type { User } from '@nextcloud/cypress'
@@ -119,11 +102,23 @@ const genericProperties = ['Location', 'X (formerly Twitter)', 'Fediverse']
 const nonfederatedProperties = ['Organisation', 'Role', 'Headline', 'About']
 
 describe('Settings: Change personal information', { testIsolation: true }, () => {
+	let snapshot: string = ''
 
 	before(() => {
 		// ensure we can set locale and language
 		cy.runOccCommand('config:system:delete force_language')
 		cy.runOccCommand('config:system:delete force_locale')
+		cy.createRandomUser().then(($user) => {
+			user = $user
+			cy.modifyUser(user, 'language', 'en')
+			cy.modifyUser(user, 'locale', 'en_US')
+		})
+
+		cy.wait(500)
+
+		cy.backupDB().then(($snapshot) => {
+			snapshot = $snapshot
+		})
 	})
 
 	after(() => {
@@ -132,14 +127,13 @@ describe('Settings: Change personal information', { testIsolation: true }, () =>
 	})
 
 	beforeEach(() => {
-		cy.createRandomUser().then(($user) => {
-			user = $user
-			cy.modifyUser(user, 'language', 'en')
-			cy.modifyUser(user, 'locale', 'en_US')
-			cy.login($user)
-			cy.visit('/settings/user')
-		})
+		cy.login(user)
+		cy.visit('/settings/user')
 		cy.intercept('PUT', /ocs\/v2.php\/cloud\/users\//).as('submitSetting')
+	})
+
+	afterEach(() => {
+		cy.restoreDB(snapshot)
 	})
 
 	it('Can dis- and enable the profile', () => {
@@ -149,6 +143,7 @@ describe('Settings: Change personal information', { testIsolation: true }, () =>
 		cy.visit('/settings/user')
 		cy.contains('Enable profile').click()
 		handlePasswordConfirmation(user.password)
+		cy.wait('@submitSetting')
 
 		cy.visit(`/u/${user.userId}`, { failOnStatusCode: false })
 		cy.contains('h2', 'Profile not found').should('be.visible')
@@ -156,6 +151,7 @@ describe('Settings: Change personal information', { testIsolation: true }, () =>
 		cy.visit('/settings/user')
 		cy.contains('Enable profile').click()
 		handlePasswordConfirmation(user.password)
+		cy.wait('@submitSetting')
 
 		cy.visit(`/u/${user.userId}`, { failOnStatusCode: false })
 		cy.contains('h2', user.userId).should('be.visible')

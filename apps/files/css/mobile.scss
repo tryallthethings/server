@@ -1,3 +1,8 @@
+/*!
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2014-2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
 @use 'variables';
 
 /* 938 = table min-width(688) + app-navigation width: 250\
@@ -24,21 +29,21 @@ table td {
 
 /* remove shift for multiselect bar to account for missing navigation */
 table.multiselect thead {
-	padding-left: 0;
+	padding-inline-start: 0;
 }
 
 .fileList a.action.action-menu img {
-	padding-left: 0;
+	padding-inline-start: 0;
 }
 
 .fileList .fileActionsMenu {
-	margin-right: 6px;
+	margin-inline-end: 6px;
 }
 /* hide text of the share action on mobile */
 /* .hidden-visually for accessbility */
 .fileList a.action-share span:not(.icon):not(.avatar) {
 	position: absolute;
-	left:-10000px;
+	inset-inline-start: -10000px;
 	top: auto;
 	width: 1px;
 	height: 1px;
@@ -85,6 +90,6 @@ table.dragshadow {
 
 	/* Remove the margin to reduce the overlap between the name and the icons */
 	table.multiselect th .columntitle.name {
-		margin-left: 0;
+		margin-inline-start: 0;
 	}
 }

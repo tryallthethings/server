@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright (c) 2016 Joas Schilling <nickvergessen@owncloud.com>
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\L10N;
@@ -11,10 +10,12 @@ namespace Test\L10N;
 use DateTime;
 use OC\L10N\Factory;
 use OC\L10N\L10N;
+use OCP\App\IAppManager;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
+use OCP\L10N\IFactory;
 use Test\TestCase;
 
 /**
@@ -34,7 +35,8 @@ class L10nTest extends TestCase {
 		/** @var IUserSession $userSession */
 		$userSession = $this->createMock(IUserSession::class);
 		$cacheFactory = $this->createMock(ICacheFactory::class);
-		return new Factory($config, $request, $userSession, $cacheFactory, \OC::$SERVERROOT);
+		$appManager = $this->createMock(IAppManager::class);
+		return new Factory($config, $request, $userSession, $cacheFactory, \OC::$SERVERROOT, $appManager);
 	}
 
 	public function testSimpleTranslationWithTrailingColon(): void {
@@ -44,15 +46,15 @@ class L10nTest extends TestCase {
 		$this->assertEquals('Files:', $l->t('Files:'));
 	}
 
-	public function testGermanPluralTranslations() {
+	public function testGermanPluralTranslations(): void {
 		$transFile = \OC::$SERVERROOT.'/tests/data/l10n/de.json';
 		$l = new L10N($this->getFactory(), 'test', 'de', 'de_AT', [$transFile]);
 
-		$this->assertEquals('1 Datei', (string) $l->n('%n file', '%n files', 1));
-		$this->assertEquals('2 Dateien', (string) $l->n('%n file', '%n files', 2));
+		$this->assertEquals('1 Datei', (string)$l->n('%n file', '%n files', 1));
+		$this->assertEquals('2 Dateien', (string)$l->n('%n file', '%n files', 2));
 	}
 
-	public function testRussianPluralTranslations() {
+	public function testRussianPluralTranslations(): void {
 		$transFile = \OC::$SERVERROOT.'/tests/data/l10n/ru.json';
 		$l = new L10N($this->getFactory(), 'test', 'ru', 'ru_UA', [$transFile]);
 
@@ -76,7 +78,7 @@ class L10nTest extends TestCase {
 		*/
 	}
 
-	public function testCzechPluralTranslations() {
+	public function testCzechPluralTranslations(): void {
 		$transFile = \OC::$SERVERROOT.'/tests/data/l10n/cs.json';
 		$l = new L10N($this->getFactory(), 'test', 'cs', 'cs_CZ', [$transFile]);
 
@@ -85,13 +87,13 @@ class L10nTest extends TestCase {
 		$this->assertEquals('5 oken', (string)$l->n('%n window', '%n windows', 5));
 	}
 
-	public function testGermanPluralWithCzechLocaleTranslations() {
+	public function testGermanPluralWithCzechLocaleTranslations(): void {
 		$transFile = \OC::$SERVERROOT.'/tests/data/l10n/de.json';
 		$l = new L10N($this->getFactory(), 'test', 'de', 'cs_CZ', [$transFile]);
 
-		$this->assertEquals('1 Datei', (string) $l->n('%n file', '%n files', 1));
-		$this->assertEquals('2 Dateien', (string) $l->n('%n file', '%n files', 2));
-		$this->assertEquals('5 Dateien', (string) $l->n('%n file', '%n files', 5));
+		$this->assertEquals('1 Datei', (string)$l->n('%n file', '%n files', 1));
+		$this->assertEquals('2 Dateien', (string)$l->n('%n file', '%n files', 2));
+		$this->assertEquals('5 Dateien', (string)$l->n('%n file', '%n files', 5));
 	}
 
 	public function dataPlaceholders(): array {
@@ -154,7 +156,7 @@ class L10nTest extends TestCase {
 	/**
 	 * @dataProvider localizationData
 	 */
-	public function testNumericStringLocalization($expectedDate, $lang, $locale, $type, $value) {
+	public function testNumericStringLocalization($expectedDate, $lang, $locale, $type, $value): void {
 		$l = new L10N($this->getFactory(), 'test', $lang, $locale, []);
 		$this->assertSame($expectedDate, $l->l($type, $value));
 	}
@@ -172,7 +174,7 @@ class L10nTest extends TestCase {
 	 * @param $lang
 	 * @param $locale
 	 */
-	public function testFirstWeekDay($expected, $lang, $locale) {
+	public function testFirstWeekDay($expected, $lang, $locale): void {
 		$l = new L10N($this->getFactory(), 'test', $lang, $locale, []);
 		$this->assertSame($expected, $l->l('firstday', 'firstday'));
 	}
@@ -190,22 +192,22 @@ class L10nTest extends TestCase {
 	 * @param $lang
 	 * @param $locale
 	 */
-	public function testJSDate($expected, $lang, $locale) {
+	public function testJSDate($expected, $lang, $locale): void {
 		$l = new L10N($this->getFactory(), 'test', $lang, $locale, []);
 		$this->assertSame($expected, $l->l('jsdate', 'jsdate'));
 	}
 
-	public function testFactoryGetLanguageCode() {
+	public function testFactoryGetLanguageCode(): void {
 		$l = $this->getFactory()->get('lib', 'de');
 		$this->assertEquals('de', $l->getLanguageCode());
 	}
 
-	public function testServiceGetLanguageCode() {
+	public function testServiceGetLanguageCode(): void {
 		$l = \OCP\Util::getL10N('lib', 'de');
 		$this->assertEquals('de', $l->getLanguageCode());
 	}
 
-	public function testWeekdayName() {
+	public function testWeekdayName(): void {
 		$l = \OCP\Util::getL10N('lib', 'de');
 		$this->assertEquals('Mo.', $l->l('weekdayName', new \DateTime('2017-11-6'), ['width' => 'abbreviated']));
 	}
@@ -215,10 +217,10 @@ class L10nTest extends TestCase {
 	 * @param $locale
 	 * @param $language
 	 */
-	public function testFindLanguageFromLocale($locale, $language) {
+	public function testFindLanguageFromLocale($locale, $language): void {
 		$this->assertEquals(
 			$language,
-			\OC::$server->getL10NFactory()->findLanguageFromLocale('lib', $locale)
+			\OC::$server->get(IFactory::class)->findLanguageFromLocale('lib', $locale)
 		);
 	}
 

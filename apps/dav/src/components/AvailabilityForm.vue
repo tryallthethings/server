@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<div>
 		<div class="time-zone">
@@ -160,12 +164,13 @@ export default {
 	width: 120px;
 }
 .time-zone {
-	padding: 32px 12px 12px 0;
-    display: flex;
-    flex-wrap: wrap;
+	padding-block: 32px 12px;
+	padding-inline: 0 12px;
+	display: flex;
+	flex-wrap: wrap;
 
 	&__heading {
-		margin-right: calc(var(--default-grid-baseline) * 2);
+		margin-inline-end: calc(var(--default-grid-baseline) * 2);
 		line-height: var(--default-clickable-area);
 		font-weight: bold;
 	}
@@ -197,12 +202,12 @@ export default {
 }
 
 .to-text {
-	padding-right: 12px;
+	padding-inline-end: 12px;
 }
 
 .empty-content {
 	color: var(--color-text-lighter);
-	margin-top: 4px;
+	margin-block-start: var(--default-grid-baseline);
 	align-self: center;
 }
 </style>

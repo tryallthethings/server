@@ -1,24 +1,7 @@
 <?php
 /**
- * @copyright 2016, Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace Test\Repair\Owncloud;
 
@@ -49,7 +32,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 	/** @var CleanPreviewsBackgroundJob */
 	private $job;
 
-	/** @var  IUserManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserManager|\PHPUnit_Framework_MockObject_MockObject */
 	private $userManager;
 
 	public function setUp(): void {
@@ -72,7 +55,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 		);
 	}
 
-	public function testCleanupPreviewsUnfinished() {
+	public function testCleanupPreviewsUnfinished(): void {
 		$userFolder = $this->createMock(Folder::class);
 		$userRoot = $this->createMock(Folder::class);
 		$thumbnailFolder = $this->createMock(Folder::class);
@@ -117,7 +100,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 		$this->job->run(['uid' => 'myuid']);
 	}
 
-	public function testCleanupPreviewsFinished() {
+	public function testCleanupPreviewsFinished(): void {
 		$userFolder = $this->createMock(Folder::class);
 		$userRoot = $this->createMock(Folder::class);
 		$thumbnailFolder = $this->createMock(Folder::class);
@@ -160,7 +143,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 	}
 
 
-	public function testNoUserFolder() {
+	public function testNoUserFolder(): void {
 		$this->rootFolder->method('getUserFolder')
 			->with($this->equalTo('myuid'))
 			->willThrowException(new NotFoundException());
@@ -175,7 +158,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 		$this->job->run(['uid' => 'myuid']);
 	}
 
-	public function testNoThumbnailFolder() {
+	public function testNoThumbnailFolder(): void {
 		$userFolder = $this->createMock(Folder::class);
 		$userRoot = $this->createMock(Folder::class);
 
@@ -199,7 +182,7 @@ class CleanPreviewsBackgroundJobTest extends TestCase {
 		$this->job->run(['uid' => 'myuid']);
 	}
 
-	public function testNotPermittedToDelete() {
+	public function testNotPermittedToDelete(): void {
 		$userFolder = $this->createMock(Folder::class);
 		$userRoot = $this->createMock(Folder::class);
 		$thumbnailFolder = $this->createMock(Folder::class);

@@ -1,30 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author J0WI <J0WI@users.noreply.github.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Tigran Mkrtchyan <tigran.mkrtchyan@desy.de>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Files\Storage\Wrapper;
 
@@ -403,16 +382,6 @@ class Encoding extends Wrapper {
 	}
 
 	/**
-	 * search for occurrences of $query in file names
-	 *
-	 * @param string $query
-	 * @return array|bool
-	 */
-	public function search($query) {
-		return $this->storage->search($query);
-	}
-
-	/**
 	 * see https://www.php.net/manual/en/function.touch.php
 	 * If the backend does not support the operation, false should be returned
 	 *
@@ -449,13 +418,6 @@ class Encoding extends Wrapper {
 		return $this->storage->hasUpdated($this->findPathToUse($path), $time);
 	}
 
-	/**
-	 * get a cache instance for the storage
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the cache
-	 * @return \OC\Files\Cache\Cache
-	 */
 	public function getCache($path = '', $storage = null) {
 		if (!$storage) {
 			$storage = $this;
@@ -463,13 +425,6 @@ class Encoding extends Wrapper {
 		return $this->storage->getCache($this->findPathToUse($path), $storage);
 	}
 
-	/**
-	 * get a scanner instance for the storage
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the scanner
-	 * @return \OC\Files\Cache\Scanner
-	 */
 	public function getScanner($path = '', $storage = null) {
 		if (!$storage) {
 			$storage = $this;

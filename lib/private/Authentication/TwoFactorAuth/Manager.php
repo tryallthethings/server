@@ -1,29 +1,10 @@
 <?php
 
 declare(strict_types=1);
-
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Authentication\TwoFactorAuth;
 
@@ -211,7 +192,7 @@ class Manager {
 
 		if (!empty($missing)) {
 			// There was at least one provider missing
-			$this->logger->alert(count($missing) . " two-factor auth providers failed to load", ['app' => 'core']);
+			$this->logger->alert(count($missing) . ' two-factor auth providers failed to load', ['app' => 'core']);
 
 			return true;
 		}
@@ -313,7 +294,7 @@ class Manager {
 	 * @param IUser $user the currently logged in user
 	 * @return boolean
 	 */
-	public function needsSecondFactor(IUser $user = null): bool {
+	public function needsSecondFactor(?IUser $user = null): bool {
 		if ($user === null) {
 			return false;
 		}
@@ -341,7 +322,7 @@ class Manager {
 				$tokenId = $token->getId();
 				$tokensNeeding2FA = $this->config->getUserKeys($user->getUID(), 'login_token_2fa');
 
-				if (!\in_array((string) $tokenId, $tokensNeeding2FA, true)) {
+				if (!\in_array((string)$tokenId, $tokensNeeding2FA, true)) {
 					$this->session->set(self::SESSION_UID_DONE, $user->getUID());
 					return false;
 				}
@@ -378,7 +359,7 @@ class Manager {
 
 		$id = $this->session->getId();
 		$token = $this->tokenProvider->getToken($id);
-		$this->config->setUserValue($user->getUID(), 'login_token_2fa', (string) $token->getId(), (string)$this->timeFactory->getTime());
+		$this->config->setUserValue($user->getUID(), 'login_token_2fa', (string)$token->getId(), (string)$this->timeFactory->getTime());
 	}
 
 	public function clearTwoFactorPending(string $userId) {

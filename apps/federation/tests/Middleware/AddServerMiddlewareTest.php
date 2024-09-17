@@ -1,28 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Federation\Tests\Middleware;
 
@@ -36,7 +17,7 @@ use Test\TestCase;
 
 class AddServerMiddlewareTest extends TestCase {
 
-	/** @var  \PHPUnit\Framework\MockObject\MockObject | LoggerInterface */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | LoggerInterface */
 	private $logger;
 
 	/** @var \PHPUnit\Framework\MockObject\MockObject | \OCP\IL10N */
@@ -44,7 +25,7 @@ class AddServerMiddlewareTest extends TestCase {
 
 	private AddServerMiddleware $middleware;
 
-	/** @var  \PHPUnit\Framework\MockObject\MockObject | SettingsController */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | SettingsController */
 	private $controller;
 
 	protected function setUp(): void {
@@ -68,7 +49,7 @@ class AddServerMiddlewareTest extends TestCase {
 	 * @param \Exception $exception
 	 * @param string $hint
 	 */
-	public function testAfterException($exception, $hint) {
+	public function testAfterException($exception, $hint): void {
 		$this->logger->expects($this->once())->method('error');
 
 		$this->l10n->expects($this->any())->method('t')

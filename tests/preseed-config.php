@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2012-2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
 $CONFIG = [
 	'appstoreenabled' => false,
 	'apps_paths' => [
@@ -71,6 +75,27 @@ if (getenv('OBJECT_STORE') === 's3') {
 			'region' => 'RegionOne',
 			'url' => "http://$swiftHost/v3",
 			'bucket' => 'nextcloud',
+		]
+	];
+}
+
+if (getenv('SHARDING') == '1') {
+	$CONFIG['dbsharding'] = [
+		'filecache' => [
+			'shards' => [
+				[
+					'port' => 5001,
+				],
+				[
+					'port' => 5002,
+				],
+				[
+					'port' => 5003,
+				],
+				[
+					'port' => 5004,
+				],
+			]
 		]
 	];
 }

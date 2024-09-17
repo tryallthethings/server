@@ -1,24 +1,7 @@
 <!--
-  - @copyright Copyright (c) 2023 John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @author John Molakvoæ <skjnldsv@protonmail.com>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
+  - SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<td class="files-list__row-actions"
 		data-cy-files-list-row-actions>
@@ -52,6 +35,7 @@
 				:close-after-click="!isMenu(action.id)"
 				:data-cy-files-list-row-action="action.id"
 				:is-menu="isMenu(action.id)"
+				:aria-label="action.title?.([source], currentView)"
 				:title="action.title?.([source], currentView)"
 				@click="onActionClick(action)">
 				<template #icon>
@@ -93,11 +77,13 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from 'vue'
+import type { PropType, ShallowRef } from 'vue'
+import type { FileAction, Node, View } from '@nextcloud/files'
 
-import { DefaultType, FileAction, Node, NodeStatus, View, getFileActions } from '@nextcloud/files'
+import { DefaultType, NodeStatus } from '@nextcloud/files'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { defineComponent, inject } from 'vue'
 
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
@@ -105,21 +91,16 @@ import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import ArrowLeftIcon from 'vue-material-design-icons/ArrowLeft.vue'
-import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
-import Vue from 'vue'
-
 import CustomElementRender from '../CustomElementRender.vue'
-import logger from '../../logger.js'
 
-// The registered actions list
-const actions = getFileActions()
+import { useNavigation } from '../../composables/useNavigation'
+import logger from '../../logger.ts'
 
-export default Vue.extend({
+export default defineComponent({
 	name: 'FileEntryActions',
 
 	components: {
 		ArrowLeftIcon,
-		ChevronRightIcon,
 		CustomElementRender,
 		NcActionButton,
 		NcActions,
@@ -151,6 +132,17 @@ export default Vue.extend({
 		},
 	},
 
+	setup() {
+		const { currentView } = useNavigation()
+		const enabledFileActions = inject<FileAction[]>('enabledFileActions', [])
+
+		return {
+			// The file list is guaranteed to be only shown with active view
+			currentView: currentView as ShallowRef<View>,
+			enabledFileActions,
+		}
+	},
+
 	data() {
 		return {
 			openedSubmenu: null as FileAction | null,
@@ -162,22 +154,8 @@ export default Vue.extend({
 			// Remove any trailing slash but leave root slash
 			return (this.$route?.query?.dir?.toString() || '/').replace(/^(.+)\/$/, '$1')
 		},
-		currentView(): View {
-			return this.$navigation.active as View
-		},
 		isLoading() {
 			return this.source.status === NodeStatus.LOADING
-		},
-
-		// Sorted actions that are enabled for this node
-		enabledActions() {
-			if (this.source.attributes.failed) {
-				return []
-			}
-
-			return actions
-				.filter(action => !action.enabled || action.enabled([this.source], this.currentView))
-				.sort((a, b) => (a.order || 0) - (b.order || 0))
 		},
 
 		// Enabled action that are displayed inline
@@ -185,7 +163,7 @@ export default Vue.extend({
 			if (this.filesListWidth < 768 || this.gridMode) {
 				return []
 			}
-			return this.enabledActions.filter(action => action?.inline?.(this.source, this.currentView))
+			return this.enabledFileActions.filter(action => action?.inline?.(this.source, this.currentView))
 		},
 
 		// Enabled action that are displayed inline with a custom render function
@@ -193,12 +171,7 @@ export default Vue.extend({
 			if (this.gridMode) {
 				return []
 			}
-			return this.enabledActions.filter(action => typeof action.renderInline === 'function')
-		},
-
-		// Default actions
-		enabledDefaultActions() {
-			return this.enabledActions.filter(action => !!action?.default)
+			return this.enabledFileActions.filter(action => typeof action.renderInline === 'function')
 		},
 
 		// Actions shown in the menu
@@ -213,7 +186,7 @@ export default Vue.extend({
 				// Showing inline first for the NcActions inline prop
 				...this.enabledInlineActions,
 				// Then the rest
-				...this.enabledActions.filter(action => action.default !== DefaultType.HIDDEN && typeof action.renderInline !== 'function'),
+				...this.enabledFileActions.filter(action => action.default !== DefaultType.HIDDEN && typeof action.renderInline !== 'function'),
 			].filter((value, index, self) => {
 				// Then we filter duplicates to prevent inline actions to be shown twice
 				return index === self.findIndex(action => action.id === value.id)
@@ -227,15 +200,15 @@ export default Vue.extend({
 		},
 
 		enabledSubmenuActions() {
-			return this.enabledActions
+			return this.enabledFileActions
 				.filter(action => action.parent)
 				.reduce((arr, action) => {
-					if (!arr[action.parent]) {
-						arr[action.parent] = []
+					if (!arr[action.parent!]) {
+						arr[action.parent!] = []
 					}
-					arr[action.parent].push(action)
+					arr[action.parent!].push(action)
 					return arr
-				}, {} as Record<string, FileAction>)
+				}, {} as Record<string, FileAction[]>)
 		},
 
 		openedMenu: {
@@ -257,7 +230,7 @@ export default Vue.extend({
 		},
 
 		mountType() {
-			return this.source._attributes['mount-type']
+			return this.source.attributes['mount-type']
 		},
 	},
 
@@ -288,7 +261,7 @@ export default Vue.extend({
 			try {
 				// Set the loading marker
 				this.$emit('update:loading', action.id)
-				Vue.set(this.source, 'status', NodeStatus.LOADING)
+				this.$set(this.source, 'status', NodeStatus.LOADING)
 
 				const success = await action.exec(this.source, this.currentView, this.currentDir)
 
@@ -308,20 +281,12 @@ export default Vue.extend({
 			} finally {
 				// Reset the loading marker
 				this.$emit('update:loading', '')
-				Vue.set(this.source, 'status', undefined)
+				this.$set(this.source, 'status', undefined)
 
 				// If that was a submenu, we just go back after the action
 				if (isSubmenu) {
 					this.openedSubmenu = null
 				}
-			}
-		},
-		execDefaultAction(event) {
-			if (this.enabledDefaultActions.length > 0) {
-				event.preventDefault()
-				event.stopPropagation()
-				// Execute the first default action if any
-				this.enabledDefaultActions[0].exec(this.source, this.currentView, this.currentDir)
 			}
 		},
 
@@ -337,7 +302,7 @@ export default Vue.extend({
 			// Focus the previous menu action button
 			this.$nextTick(() => {
 				// Focus the action button
-				const menuAction = this.$refs[`action-${action.id}`][0]
+				const menuAction = this.$refs[`action-${action.id}`]?.[0]
 				if (menuAction) {
 					menuAction.$el.querySelector('button')?.focus()
 				}

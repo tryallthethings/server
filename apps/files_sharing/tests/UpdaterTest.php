@@ -1,32 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Tobia De Koninck <tobia@ledfan.be>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing\Tests;
 
@@ -74,7 +50,7 @@ class UpdaterTest extends TestCase {
 	 * points should be unshared before the folder gets deleted so
 	 * that the mount point doesn't end up at the trash bin
 	 */
-	public function testDeleteParentFolder() {
+	public function testDeleteParentFolder(): void {
 		$status = \OC::$server->getAppManager()->isEnabledForUser('files_trashbin');
 		(new \OC_App())->enable('files_trashbin');
 
@@ -152,7 +128,7 @@ class UpdaterTest extends TestCase {
 	 *
 	 * @param string $shareFolder share folder to use
 	 */
-	public function testShareFile($shareFolder) {
+	public function testShareFile($shareFolder): void {
 		$config = \OC::$server->getConfig();
 		$oldShareFolder = $config->getSystemValue('share_folder');
 		$config->setSystemValue('share_folder', $shareFolder);
@@ -202,7 +178,7 @@ class UpdaterTest extends TestCase {
 	/**
 	 * if a folder gets renamed all children mount points should be renamed too
 	 */
-	public function testRename() {
+	public function testRename(): void {
 		$fileinfo = \OC\Files\Filesystem::getFileInfo($this->folder);
 
 		$share = $this->share(
@@ -249,7 +225,7 @@ class UpdaterTest extends TestCase {
 	 * 	  |-subfolder2
 	 * 	    |-file2.txt --> shared with user3
 	 */
-	public function testMovedIntoShareChangeOwner() {
+	public function testMovedIntoShareChangeOwner(): void {
 		$this->markTestSkipped('Skipped because this is failing with S3 as primary as file id are change when moved.');
 
 		// user1 creates folder1

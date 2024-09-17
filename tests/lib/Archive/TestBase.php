@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright (c) 2012 Robin Appelman <icewind@owncloud.com>
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Archive;
@@ -25,7 +24,7 @@ abstract class TestBase extends \Test\TestCase {
 	 */
 	abstract protected function getNew();
 
-	public function testGetFiles() {
+	public function testGetFiles(): void {
 		$this->instance = $this->getExisting();
 		$allFiles = $this->instance->getFiles();
 		$expected = ['lorem.txt','logo-wide.png','dir/', 'dir/lorem.txt'];
@@ -51,7 +50,7 @@ abstract class TestBase extends \Test\TestCase {
 		}
 	}
 
-	public function testContent() {
+	public function testContent(): void {
 		$this->instance = $this->getExisting();
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$textFile = $dir.'/lorem.txt';
@@ -62,7 +61,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->assertEquals(file_get_contents($textFile), file_get_contents($tmpFile));
 	}
 
-	public function testWrite() {
+	public function testWrite(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$textFile = $dir.'/lorem.txt';
 		$this->instance = $this->getNew();
@@ -77,7 +76,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->assertEquals('foobar', $this->instance->getFile('lorem.txt'));
 	}
 
-	public function testReadStream() {
+	public function testReadStream(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$this->instance = $this->getExisting();
 		$fh = $this->instance->getStream('lorem.txt', 'r');
@@ -86,7 +85,7 @@ abstract class TestBase extends \Test\TestCase {
 		fclose($fh);
 		$this->assertEquals(file_get_contents($dir.'/lorem.txt'), $content);
 	}
-	public function testWriteStream() {
+	public function testWriteStream(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$this->instance = $this->getNew();
 		$fh = $this->instance->getStream('lorem.txt', 'w');
@@ -97,7 +96,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->assertTrue($this->instance->fileExists('lorem.txt'));
 		$this->assertEquals(file_get_contents($dir.'/lorem.txt'), $this->instance->getFile('lorem.txt'));
 	}
-	public function testFolder() {
+	public function testFolder(): void {
 		$this->instance = $this->getNew();
 		$this->assertFalse($this->instance->fileExists('/test'));
 		$this->assertFalse($this->instance->fileExists('/test/'));
@@ -108,7 +107,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->assertFalse($this->instance->fileExists('/test'));
 		$this->assertFalse($this->instance->fileExists('/test/'));
 	}
-	public function testExtract() {
+	public function testExtract(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$this->instance = $this->getExisting();
 		$tmpDir = \OC::$server->getTempManager()->getTemporaryFolder();
@@ -119,7 +118,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->assertEquals(file_get_contents($dir.'/lorem.txt'), file_get_contents($tmpDir.'lorem.txt'));
 		\OCP\Files::rmdirr($tmpDir);
 	}
-	public function testMoveRemove() {
+	public function testMoveRemove(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$textFile = $dir.'/lorem.txt';
 		$this->instance = $this->getNew();
@@ -132,7 +131,7 @@ abstract class TestBase extends \Test\TestCase {
 		$this->instance->remove('target.txt');
 		$this->assertFalse($this->instance->fileExists('target.txt'));
 	}
-	public function testRecursive() {
+	public function testRecursive(): void {
 		$dir = \OC::$SERVERROOT.'/tests/data';
 		$this->instance = $this->getNew();
 		$this->instance->addRecursive('/dir', $dir);

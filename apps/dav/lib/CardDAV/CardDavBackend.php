@@ -1,37 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arne Hamann <kontakt+github@arne.email>
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Chih-Hsuan Yen <yan12125@gmail.com>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Joas Schilling <coding@schilljs.com>
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author matt <34400929+call-me-matt@users.noreply.github.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Stefan Weil <sw@weilnetz.de>
- * @author Thomas Citharel <nextcloud@tcit.fr>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\DAV\CardDAV;
 
@@ -104,7 +76,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			->where($query->expr()->eq('principaluri', $query->createNamedParameter($principalUri)));
 
 		$result = $query->executeQuery();
-		$column = (int) $result->fetchOne();
+		$column = (int)$result->fetchOne();
 		$result->closeCursor();
 		return $column;
 	}
@@ -358,7 +330,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 				$query->where($query->expr()->eq('id', $query->createNamedParameter($addressBookId)))
 					->executeStatement();
 
-				$this->addChange($addressBookId, "", 2);
+				$this->addChange($addressBookId, '', 2);
 
 				$addressBookRow = $this->getAddressBookById((int)$addressBookId);
 				$shares = $this->getShares((int)$addressBookId);
@@ -1060,11 +1032,11 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 	 * @param string $pattern which should match within the $searchProperties
 	 * @param array $searchProperties defines the properties within the query pattern should match
 	 * @param array $options = array() to define the search behavior
-	 * 	  - 'types' boolean (since 15.0.0) If set to true, fields that come with a TYPE property will be an array
-	 *    - 'escape_like_param' - If set to false wildcards _ and % are not escaped, otherwise they are
-	 *    - 'limit' - Set a numeric limit for the search results
-	 *    - 'offset' - Set the offset for the limited search results
-	 *    - 'wildcard' - Whether the search should use wildcards
+	 *                       - 'types' boolean (since 15.0.0) If set to true, fields that come with a TYPE property will be an array
+	 *                       - 'escape_like_param' - If set to false wildcards _ and % are not escaped, otherwise they are
+	 *                       - 'limit' - Set a numeric limit for the search results
+	 *                       - 'offset' - Set the offset for the limited search results
+	 *                       - 'wildcard' - Whether the search should use wildcards
 	 * @psalm-param array{types?: bool, escape_like_param?: bool, limit?: int, offset?: int, wildcard?: bool} $options
 	 * @return array an array of contacts which are arrays of key-value-pairs
 	 */
@@ -1089,7 +1061,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		array $options = []): array {
 		return $this->atomic(function () use ($principalUri, $pattern, $searchProperties, $options) {
 			$addressBookIds = array_map(static function ($row):int {
-				return (int) $row['id'];
+				return (int)$row['id'];
 			}, $this->getAddressBooksForUser($principalUri));
 
 			return $this->searchByAddressBookIds($addressBookIds, $pattern, $searchProperties, $options);
@@ -1151,7 +1123,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			->andWhere($query2->expr()->in('cp.name', $query2->createNamedParameter($searchProperties, IQueryBuilder::PARAM_STR_ARRAY)));
 
 		// No need for like when the pattern is empty
-		if ('' !== $pattern) {
+		if ($pattern !== '') {
 			if (!$useWildcards) {
 				$query2->andWhere($query2->expr()->eq('cp.value', $query2->createNamedParameter($pattern)));
 			} elseif (!$escapePattern) {
@@ -1176,20 +1148,20 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			/**
 			 * FIXME Find a way to match only 4 last digits
 			 * BDAY can be --1018 without year or 20001019 with it
-			 * $bDayOr = $query2->expr()->orX();
+			 * $bDayOr = [];
 			 * if ($options['since'] instanceof DateTimeFilter) {
-			 * $bDayOr->add(
+			 * $bDayOr[] =
 			 * $query2->expr()->gte('SUBSTR(cp_bday.value, -4)',
-			 * $query2->createNamedParameter($options['since']->get()->format('md')))
+			 * $query2->createNamedParameter($options['since']->get()->format('md'))
 			 * );
 			 * }
 			 * if ($options['until'] instanceof DateTimeFilter) {
-			 * $bDayOr->add(
+			 * $bDayOr[] =
 			 * $query2->expr()->lte('SUBSTR(cp_bday.value, -4)',
-			 * $query2->createNamedParameter($options['until']->get()->format('md')))
+			 * $query2->createNamedParameter($options['until']->get()->format('md'))
 			 * );
 			 * }
-			 * $query2->andWhere($bDayOr);
+			 * $query2->andWhere($query2->expr()->orX(...$bDayOr));
 			 */
 		}
 
@@ -1214,7 +1186,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		}
 
 		return array_map(function ($array) {
-			$array['addressbookid'] = (int) $array['addressbookid'];
+			$array['addressbookid'] = (int)$array['addressbookid'];
 			$modified = false;
 			$array['carddata'] = $this->readBlob($array['carddata'], $modified);
 			if ($modified) {
@@ -1426,7 +1398,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			->from('addressbookchanges');
 
 		$result = $query->executeQuery();
-		$maxId = (int) $result->fetchOne();
+		$maxId = (int)$result->fetchOne();
 		$result->closeCursor();
 		if (!$maxId || $maxId < $keep) {
 			return 0;

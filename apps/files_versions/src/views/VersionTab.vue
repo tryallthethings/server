@@ -1,20 +1,7 @@
 <!--
- - @copyright 2022 Carl Schwan <carl@carlschwan.eu>
- - @license AGPL-3.0-or-later
- -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
- -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- - GNU Affero General Public License for more details.
- -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
- -->
+  - SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<div class="versions-tab__container">
 		<VirtualScrolling :sections="sections"
@@ -41,11 +28,10 @@
 			</template>
 			<NcLoadingIcon v-if="loading" slot="loader" class="files-list-viewer__loader" />
 		</VirtualScrolling>
-		<NcModal v-if="showVersionLabelForm"
-			:title="t('files_versions', 'Name this version')"
-			@close="showVersionLabelForm = false">
-			<VersionLabelForm :version-label="editedVersion.label" @label-update="handleLabelUpdate" />
-		</NcModal>
+		<VersionLabelDialog v-if="editedVersion"
+			:open.sync="showVersionLabelForm"
+			:version-label="editedVersion.label"
+			@label-update="handleLabelUpdate" />
 	</div>
 </template>
 
@@ -53,25 +39,23 @@
 import path from 'path'
 
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import isMobile from '@nextcloud/vue/dist/Mixins/isMobile.js'
 import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { getCurrentUser } from '@nextcloud/auth'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
+import isMobile from '@nextcloud/vue/dist/Mixins/isMobile.js'
 
 import { fetchVersions, deleteVersion, restoreVersion, setVersionLabel } from '../utils/versions.ts'
 import Version from '../components/Version.vue'
 import VirtualScrolling from '../components/VirtualScrolling.vue'
-import VersionLabelForm from '../components/VersionLabelForm.vue'
+import VersionLabelDialog from '../components/VersionLabelDialog.vue'
 
 export default {
 	name: 'VersionTab',
 	components: {
 		Version,
 		VirtualScrolling,
-		VersionLabelForm,
+		VersionLabelDialog,
 		NcLoadingIcon,
-		NcModal,
 	},
 	mixins: [
 		isMobile,
@@ -84,6 +68,7 @@ export default {
 			versions: [],
 			loading: false,
 			showVersionLabelForm: false,
+			editedVersion: null,
 		}
 	},
 	computed: {

@@ -1,8 +1,13 @@
+<!--
+  - SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<!-- Categories & filters -->
 	<NcAppNavigation :aria-label="t('settings', 'Apps')">
 		<template #list>
-			<NcAppNavigationItem id="app-category-discover"
+			<NcAppNavigationItem v-if="appstoreEnabled"
+				id="app-category-discover"
 				:to="{ name: 'apps-category', params: { category: 'discover'} }"
 				:name="APPS_SECTION_ENUM.discover">
 				<template #icon>

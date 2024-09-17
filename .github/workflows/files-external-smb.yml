@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+# SPDX-License-Identifier: MIT
 name: PHPUnit files_external SMB
 on:
   pull_request:
@@ -16,7 +18,7 @@ jobs:
       src: ${{ steps.changes.outputs.src}}
 
     steps:
-      - uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd # v3.0.0
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: changes
         continue-on-error: true
         with:
@@ -39,9 +41,9 @@ jobs:
 
     strategy:
       matrix:
-        php-versions: ['8.0', '8.3']
+        php-versions: ['8.1', '8.3']
         include:
-          - php-versions: '8.0'
+          - php-versions: '8.1'
             coverage: ${{ github.event_name != 'pull_request' }}
 
     name: php${{ matrix.php-versions }}-smb
@@ -54,12 +56,12 @@ jobs:
 
     steps:
       - name: Checkout server
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           submodules: true
 
       - name: Set up php ${{ matrix.php-versions }}
-        uses: shivammathur/setup-php@4bd44f22a98a19e0950cbad5f31095157cc9621b # v2
+        uses: shivammathur/setup-php@c541c155eee45413f5b09a52248675b1a2575231 #v2.31.1
         with:
           php-version: ${{ matrix.php-versions }}
           # https://docs.nextcloud.com/server/stable/admin_manual/installation/source_installation.html#prerequisites-for-manual-installation
@@ -92,7 +94,7 @@ jobs:
 
       - name: Upload code coverage
         if: ${{ !cancelled() && matrix.coverage }}
-        uses: codecov/codecov-action@4fe8c5f003fae66aa5ebb77cfd3e7bfbbda0b6b0 # v3.1.5
+        uses: codecov/codecov-action@4b21c320b5517fc6ffd4406a28e66325c721dc20 # v4.1.1
         with:
           files: ./clover.xml
           flags: phpunit-files-external-smb

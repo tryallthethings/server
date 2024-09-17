@@ -1,11 +1,9 @@
 <?php
 /**
- * @author Thomas Müller
- * @copyright 2014 Thomas Müller deepdiver@owncloud.com
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2023 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2014-2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
 namespace Test\App;
 
 use OC;
@@ -36,14 +34,14 @@ class InfoParserTest extends TestCase {
 	/**
 	 * @dataProvider providesInfoXml
 	 */
-	public function testParsingValidXmlWithoutCache($expectedJson, $xmlFile) {
+	public function testParsingValidXmlWithoutCache($expectedJson, $xmlFile): void {
 		$this->parserTest($expectedJson, $xmlFile);
 	}
 
 	/**
 	 * @dataProvider providesInfoXml
 	 */
-	public function testParsingValidXmlWithCache($expectedJson, $xmlFile) {
+	public function testParsingValidXmlWithCache($expectedJson, $xmlFile): void {
 		$this->parserTest($expectedJson, $xmlFile, self::$cache);
 	}
 

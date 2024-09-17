@@ -1,30 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Philippe Jung <phil.jung@free.fr>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Roger Szabo <roger.szabo@web.de>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\User_LDAP\Tests\User;
 
@@ -135,7 +114,7 @@ class ManagerTest extends \Test\TestCase {
 	/**
 	 * @dataProvider dnProvider
 	 */
-	public function testGetByDNExisting(string $inputDN) {
+	public function testGetByDNExisting(string $inputDN): void {
 		$uid = '563418fc-423b-1033-8d1c-ad5f418ee02e';
 
 		$this->access->expects($this->once())
@@ -160,7 +139,7 @@ class ManagerTest extends \Test\TestCase {
 		$this->assertInstanceOf(User::class, $user);
 	}
 
-	public function testGetByDNNotExisting() {
+	public function testGetByDNNotExisting(): void {
 		$inputDN = 'cn=gone,dc=foobar,dc=bar';
 
 		$this->access->expects($this->once())
@@ -182,7 +161,7 @@ class ManagerTest extends \Test\TestCase {
 		$this->assertNull($user);
 	}
 
-	public function testGetByUidExisting() {
+	public function testGetByUidExisting(): void {
 		$dn = 'cn=foo,dc=foobar,dc=bar';
 		$uid = '563418fc-423b-1033-8d1c-ad5f418ee02e';
 
@@ -208,7 +187,7 @@ class ManagerTest extends \Test\TestCase {
 		$this->assertInstanceOf(User::class, $user);
 	}
 
-	public function testGetByUidNotExisting() {
+	public function testGetByUidNotExisting(): void {
 		$uid = 'gone';
 
 		$this->access->expects($this->never())
@@ -234,7 +213,7 @@ class ManagerTest extends \Test\TestCase {
 	/**
 	 * @dataProvider attributeRequestProvider
 	 */
-	public function testGetAttributes($minimal) {
+	public function testGetAttributes($minimal): void {
 		$this->connection->setConfiguration([
 			'ldapEmailAttribute' => 'MAIL',
 			'ldapUserAvatarRule' => 'default',

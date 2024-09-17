@@ -1,38 +1,20 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- * @copyright Copyright (c) 2017, Georg Ehrke <oc.list@georgehrke.com>
- *
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Richard Steinmetz <richard@steinmetz.cloud>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 namespace OCA\DAV\DAV;
 
 use Exception;
+use OCA\DAV\CalDAV\Calendar;
+use OCA\DAV\CalDAV\DefaultCalendarValidator;
 use OCA\DAV\Connector\Sabre\Directory;
 use OCA\DAV\Connector\Sabre\FilesPlugin;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use OCP\IUser;
-use Sabre\CalDAV\ICalendar;
 use Sabre\DAV\Exception as DavException;
 use Sabre\DAV\PropertyStorage\Backend\BackendInterface;
 use Sabre\DAV\PropFind;
@@ -154,6 +136,7 @@ class CustomPropertiesBackend implements BackendInterface {
 
 	private Server $server;
 	private XmlService $xmlService;
+	private DefaultCalendarValidator $defaultCalendarValidator;
 
 	/**
 	 * @param Tree $tree node tree
@@ -165,6 +148,7 @@ class CustomPropertiesBackend implements BackendInterface {
 		Tree $tree,
 		IDBConnection $connection,
 		IUser $user,
+		DefaultCalendarValidator $defaultCalendarValidator,
 	) {
 		$this->server = $server;
 		$this->tree = $tree;
@@ -175,6 +159,7 @@ class CustomPropertiesBackend implements BackendInterface {
 			$this->xmlService->elementMap,
 			self::COMPLEX_XML_ELEMENT_MAP,
 		);
+		$this->defaultCalendarValidator = $defaultCalendarValidator;
 	}
 
 	/**
@@ -338,10 +323,11 @@ class CustomPropertiesBackend implements BackendInterface {
 
 				// $path is the principal here as this prop is only set on principals
 				$node = $this->tree->getNodeForPath($href);
-				if (!($node instanceof ICalendar) || $node->getOwner() !== $path) {
+				if (!($node instanceof Calendar) || $node->getOwner() !== $path) {
 					throw new DavException('No such calendar');
 				}
 
+				$this->defaultCalendarValidator->validateScheduleDefaultCalendar($node);
 				break;
 		}
 	}
@@ -378,16 +364,16 @@ class CustomPropertiesBackend implements BackendInterface {
 	private function cacheDirectory(string $path, Directory $node): void {
 		$prefix = ltrim($path . '/', '/');
 		$query = $this->connection->getQueryBuilder();
-		$query->select('name', 'propertypath', 'propertyname', 'propertyvalue', 'valuetype')
+		$query->select('name', 'p.propertypath', 'p.propertyname', 'p.propertyvalue', 'p.valuetype')
 			->from('filecache', 'f')
-			->leftJoin('f', 'properties', 'p', $query->expr()->andX(
-				$query->expr()->eq('propertypath', $query->func()->concat(
-					$query->createNamedParameter($prefix),
-					'name'
-				)),
-				$query->expr()->eq('userid', $query->createNamedParameter($this->user->getUID()))
-			))
-			->where($query->expr()->eq('parent', $query->createNamedParameter($node->getInternalFileId(), IQueryBuilder::PARAM_INT)));
+			->hintShardKey('storage', $node->getNode()->getMountPoint()->getNumericStorageId())
+			->leftJoin('f', 'properties', 'p', $query->expr()->eq('p.propertypath', $query->func()->concat(
+				$query->createNamedParameter($prefix),
+				'f.name'
+			)),
+			)
+			->where($query->expr()->eq('parent', $query->createNamedParameter($node->getInternalFileId(), IQueryBuilder::PARAM_INT)))
+			->andWhere($query->expr()->eq('p.userid', $query->createNamedParameter($this->user->getUID())));
 		$result = $query->executeQuery();
 
 		$propsByPath = [];
@@ -430,7 +416,7 @@ class CustomPropertiesBackend implements BackendInterface {
 			// request only a subset
 			$sql .= ' AND `propertyname` in (?)';
 			$whereValues[] = $requestedProperties;
-			$whereTypes[] = \Doctrine\DBAL\Connection::PARAM_STR_ARRAY;
+			$whereTypes[] = IQueryBuilder::PARAM_STR_ARRAY;
 		}
 
 		$result = $this->connection->executeQuery(

@@ -1,24 +1,7 @@
 <?php
 /**
- * @copyright 2017, Georg Ehrke <oc.list@georgehrke.com>
- *
- * @author Georg Ehrke <oc.list@georgehrke.com>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Calendar;
@@ -55,7 +38,7 @@ class ManagerTest extends TestCase {
 	/** @var Manager */
 	private $manager;
 
-	/** @var ITimeFactory|ITimeFactory&MockObject|MockObject  */
+	/** @var ITimeFactory|ITimeFactory&MockObject|MockObject */
 	private $time;
 
 	protected function setUp(): void {
@@ -77,7 +60,7 @@ class ManagerTest extends TestCase {
 	/**
 	 * @dataProvider searchProvider
 	 */
-	public function testSearch($search1, $search2, $expected) {
+	public function testSearch($search1, $search2, $expected): void {
 		/** @var ICalendar | MockObject $calendar1 */
 		$calendar1 = $this->createMock(ICalendar::class);
 		$calendar1->method('getKey')->willReturn('simple:1');
@@ -104,7 +87,7 @@ class ManagerTest extends TestCase {
 	/**
 	 * @dataProvider searchProvider
 	 */
-	public function testSearchOptions($search1, $search2, $expected) {
+	public function testSearchOptions($search1, $search2, $expected): void {
 		/** @var ICalendar | MockObject $calendar1 */
 		$calendar1 = $this->createMock(ICalendar::class);
 		$calendar1->method('getKey')->willReturn('simple:1');
@@ -185,7 +168,7 @@ class ManagerTest extends TestCase {
 		];
 	}
 
-	public function testRegisterUnregister() {
+	public function testRegisterUnregister(): void {
 		/** @var ICalendar | MockObject $calendar1 */
 		$calendar1 = $this->createMock(ICalendar::class);
 		$calendar1->method('getKey')->willReturn('key1');
@@ -209,7 +192,7 @@ class ManagerTest extends TestCase {
 		$this->assertContains($calendar2, $result);
 	}
 
-	public function testGetCalendars() {
+	public function testGetCalendars(): void {
 		/** @var ICalendar | MockObject $calendar1 */
 		$calendar1 = $this->createMock(ICalendar::class);
 		$calendar1->method('getKey')->willReturn('key1');
@@ -233,12 +216,12 @@ class ManagerTest extends TestCase {
 		$this->assertCount(0, $result);
 	}
 
-	public function testEnabledIfNot() {
+	public function testEnabledIfNot(): void {
 		$isEnabled = $this->manager->isEnabled();
 		$this->assertFalse($isEnabled);
 	}
 
-	public function testIfEnabledIfSo() {
+	public function testIfEnabledIfSo(): void {
 		/** @var ICalendar | MockObject $calendar */
 		$calendar = $this->createMock(ICalendar::class);
 		$this->manager->registerCalendar($calendar);

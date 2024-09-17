@@ -1,35 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author brumsel <brumsel@losecatcher.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Michael Jobst <mjobst+github@tecratech.de>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files;
 
@@ -145,16 +119,18 @@ class Helper {
 	public static function formatFileInfo(FileInfo $i) {
 		$entry = [];
 
-		$entry['id'] = $i['fileid'];
-		$entry['parentId'] = $i['parent'];
-		$entry['mtime'] = $i['mtime'] * 1000;
+		$entry['id'] = $i->getId();
+		$entry['parentId'] = $i->getParentId();
+		$entry['mtime'] = $i->getMtime() * 1000;
 		// only pick out the needed attributes
 		$entry['name'] = $i->getName();
-		$entry['permissions'] = $i['permissions'];
-		$entry['mimetype'] = $i['mimetype'];
-		$entry['size'] = $i['size'];
-		$entry['type'] = $i['type'];
-		$entry['etag'] = $i['etag'];
+		$entry['permissions'] = $i->getPermissions();
+		$entry['mimetype'] = $i->getMimetype();
+		$entry['size'] = $i->getSize();
+		$entry['type'] = $i->getType();
+		$entry['etag'] = $i->getEtag();
+		// TODO: this is using the private implementation of FileInfo
+		// the array access is not part of the public interface
 		if (isset($i['tags'])) {
 			$entry['tags'] = $i['tags'];
 		}
@@ -164,6 +140,10 @@ class Helper {
 		if (isset($i['is_share_mount_point'])) {
 			$entry['isShareMountPoint'] = $i['is_share_mount_point'];
 		}
+		if (isset($i['extraData'])) {
+			$entry['extraData'] = $i['extraData'];
+		}
+
 		$mountType = null;
 		$mount = $i->getMountPoint();
 		$mountType = $mount->getMountType();
@@ -172,9 +152,6 @@ class Helper {
 				$mountType .= '-root';
 			}
 			$entry['mountType'] = $mountType;
-		}
-		if (isset($i['extraData'])) {
-			$entry['extraData'] = $i['extraData'];
 		}
 		return $entry;
 	}

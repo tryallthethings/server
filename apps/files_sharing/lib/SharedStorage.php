@@ -1,34 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Bart Visscher <bartv@thisnet.nl>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author J0WI <J0WI@users.noreply.github.com>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Michael Gapczynski <GapczynskiM@gmail.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author scambra <sergio@entrecables.com>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing;
 
@@ -44,15 +18,17 @@ use OC\Files\Storage\Wrapper\PermissionsMask;
 use OC\Files\Storage\Wrapper\Wrapper;
 use OC\User\NoUserException;
 use OCA\Files_External\Config\ConfigAdapter;
+use OCA\Files_Sharing\ISharedStorage as LegacyISharedStorage;
 use OCP\Constants;
 use OCP\Files\Cache\ICacheEntry;
 use OCP\Files\Config\IUserMountCache;
 use OCP\Files\Folder;
 use OCP\Files\IHomeStorage;
 use OCP\Files\IRootFolder;
-use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use OCP\Files\Storage\IDisableEncryptionStorage;
+use OCP\Files\Storage\ILockingStorage;
+use OCP\Files\Storage\ISharedStorage;
 use OCP\Files\Storage\IStorage;
 use OCP\Lock\ILockingProvider;
 use OCP\Share\IShare;
@@ -61,7 +37,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Convert target path to source path and pass the function call to the correct storage provider
  */
-class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedStorage, IDisableEncryptionStorage {
+class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements LegacyISharedStorage, ISharedStorage, IDisableEncryptionStorage {
 	/** @var \OCP\Share\IShare */
 	private $superShare;
 
@@ -85,7 +61,7 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 
 	private LoggerInterface $logger;
 
-	/** @var  IStorage */
+	/** @var IStorage */
 	private $nonMaskedStorage;
 
 	private array $mountOptions = [];
@@ -164,25 +140,37 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 
 		try {
 			if (self::$initDepth > 10) {
-				throw new \Exception("Maximum share depth reached");
+				throw new \Exception('Maximum share depth reached');
 			}
 
 			/** @var IRootFolder $rootFolder */
 			$rootFolder = \OC::$server->get(IRootFolder::class);
 			$this->ownerUserFolder = $rootFolder->getUserFolder($this->superShare->getShareOwner());
 			$sourceId = $this->superShare->getNodeId();
-			$ownerNode = $this->ownerUserFolder->getFirstNodeById($sourceId);
-			if (!$ownerNode) {
+			$ownerNodes = $this->ownerUserFolder->getById($sourceId);
+
+			if (count($ownerNodes) === 0) {
 				$this->storage = new FailedStorage(['exception' => new NotFoundException("File by id $sourceId not found")]);
 				$this->cache = new FailedCache();
 				$this->rootPath = '';
 			} else {
-				if ($this->nonMaskedStorage instanceof Wrapper && $this->nonMaskedStorage->isWrapperOf($this)) {
+				foreach ($ownerNodes as $ownerNode) {
+					$nonMaskedStorage = $ownerNode->getStorage();
+
+					// check if potential source node would lead to a recursive share setup
+					if ($nonMaskedStorage instanceof Wrapper && $nonMaskedStorage->isWrapperOf($this)) {
+						continue;
+					}
+					$this->nonMaskedStorage = $nonMaskedStorage;
+					$this->sourcePath = $ownerNode->getPath();
+					$this->rootPath = $ownerNode->getInternalPath();
+					$this->cache = null;
+					break;
+				}
+				if (!$this->nonMaskedStorage) {
+					// all potential source nodes would have been recursive
 					throw new \Exception('recursive share detected');
 				}
-				$this->nonMaskedStorage = $ownerNode->getStorage();
-				$this->sourcePath = $ownerNode->getPath();
-				$this->rootPath = $ownerNode->getInternalPath();
 				$this->storage = new PermissionsMask([
 					'storage' => $this->nonMaskedStorage,
 					'mask' => $this->superShare->getPermissions(),
@@ -458,7 +446,7 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 		return new \OCA\Files_Sharing\Scanner($storage);
 	}
 
-	public function getOwner($path): string {
+	public function getOwner($path): string|false {
 		return $this->superShare->getShareOwner();
 	}
 
@@ -500,14 +488,8 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 		return true;
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 * @throws \OCP\Lock\LockedException
-	 */
 	public function acquireLock($path, $type, ILockingProvider $provider) {
-		/** @var \OCP\Files\Storage $targetStorage */
+		/** @var ILockingStorage $targetStorage */
 		[$targetStorage, $targetInternalPath] = $this->resolvePath($path);
 		$targetStorage->acquireLock($targetInternalPath, $type, $provider);
 		// lock the parent folders of the owner when locking the share as recipient
@@ -517,13 +499,8 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 		}
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function releaseLock($path, $type, ILockingProvider $provider) {
-		/** @var \OCP\Files\Storage $targetStorage */
+		/** @var ILockingStorage $targetStorage */
 		[$targetStorage, $targetInternalPath] = $this->resolvePath($path);
 		$targetStorage->releaseLock($targetInternalPath, $type, $provider);
 		// unlock the parent folders of the owner when unlocking the share as recipient
@@ -533,13 +510,8 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 		}
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function changeLock($path, $type, ILockingProvider $provider) {
-		/** @var \OCP\Files\Storage $targetStorage */
+		/** @var ILockingStorage $targetStorage */
 		[$targetStorage, $targetInternalPath] = $this->resolvePath($path);
 		$targetStorage->changeLock($targetInternalPath, $type, $provider);
 	}
@@ -569,6 +541,16 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 
 	public function getWrapperStorage() {
 		$this->init();
+
+		/**
+		 * @psalm-suppress DocblockTypeContradiction
+		 */
+		if (!$this->storage) {
+			$message = 'no storage set after init for share ' . $this->getShareId();
+			$this->logger->error($message);
+			$this->storage = new FailedStorage(['exception' => new \Exception($message)]);
+		}
+
 		return $this->storage;
 	}
 

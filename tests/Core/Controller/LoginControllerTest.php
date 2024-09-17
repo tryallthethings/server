@@ -3,23 +3,9 @@
 declare(strict_types=1);
 
 /**
- * @author Lukas Reschke <lukas@owncloud.com>
- *
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 namespace Tests\Core\Controller;
@@ -33,9 +19,9 @@ use OC\User\Session;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Defaults;
 use OCP\IConfig;
-use OCP\IInitialStateService;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
@@ -78,8 +64,8 @@ class LoginControllerTest extends TestCase {
 	/** @var IThrottler|MockObject */
 	private $throttler;
 
-	/** @var IInitialStateService|MockObject */
-	private $initialStateService;
+	/** @var IInitialState|MockObject */
+	private $initialState;
 
 	/** @var \OC\Authentication\WebAuthn\Manager|MockObject */
 	private $webAuthnManager;
@@ -104,7 +90,7 @@ class LoginControllerTest extends TestCase {
 		$this->twoFactorManager = $this->createMock(Manager::class);
 		$this->defaults = $this->createMock(Defaults::class);
 		$this->throttler = $this->createMock(IThrottler::class);
-		$this->initialStateService = $this->createMock(IInitialStateService::class);
+		$this->initialState = $this->createMock(IInitialState::class);
 		$this->webAuthnManager = $this->createMock(\OC\Authentication\WebAuthn\Manager::class);
 		$this->notificationManager = $this->createMock(IManager::class);
 		$this->l = $this->createMock(IL10N::class);
@@ -135,7 +121,7 @@ class LoginControllerTest extends TestCase {
 			$this->urlGenerator,
 			$this->defaults,
 			$this->throttler,
-			$this->initialStateService,
+			$this->initialState,
 			$this->webAuthnManager,
 			$this->notificationManager,
 			$this->l,
@@ -143,7 +129,7 @@ class LoginControllerTest extends TestCase {
 		);
 	}
 
-	public function testLogoutWithoutToken() {
+	public function testLogoutWithoutToken(): void {
 		$this->request
 			->expects($this->once())
 			->method('getCookie')
@@ -170,7 +156,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->loginController->logout());
 	}
 
-	public function testLogoutNoClearSiteData() {
+	public function testLogoutNoClearSiteData(): void {
 		$this->request
 			->expects($this->once())
 			->method('getCookie')
@@ -193,7 +179,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->loginController->logout());
 	}
 
-	public function testLogoutWithToken() {
+	public function testLogoutWithToken(): void {
 		$this->request
 			->expects($this->once())
 			->method('getCookie')
@@ -230,7 +216,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->loginController->logout());
 	}
 
-	public function testShowLoginFormForLoggedInUsers() {
+	public function testShowLoginFormForLoggedInUsers(): void {
 		$this->userSession
 			->expects($this->once())
 			->method('isLoggedIn')
@@ -244,7 +230,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expectedResponse, $this->loginController->showLoginForm('', ''));
 	}
 
-	public function testShowLoginFormWithErrorsInSession() {
+	public function testShowLoginFormWithErrorsInSession(): void {
 		$this->userSession
 			->expects($this->once())
 			->method('isLoggedIn')
@@ -265,10 +251,9 @@ class LoginControllerTest extends TestCase {
 					],
 				]
 			);
-		$this->initialStateService->expects($this->exactly(12))
+		$this->initialState->expects($this->exactly(13))
 			->method('provideInitialState')
 			->withConsecutive([
-				'core',
 				'loginMessages',
 				[
 					'MessageArray1',
@@ -277,7 +262,6 @@ class LoginControllerTest extends TestCase {
 				],
 			],
 				[
-					'core',
 					'loginErrors',
 					[
 						'ErrorArray1',
@@ -285,7 +269,6 @@ class LoginControllerTest extends TestCase {
 					],
 				],
 				[
-					'core',
 					'loginUsername',
 					'',
 				]);
@@ -302,19 +285,17 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expectedResponse, $this->loginController->showLoginForm('', ''));
 	}
 
-	public function testShowLoginFormForFlowAuth() {
+	public function testShowLoginFormForFlowAuth(): void {
 		$this->userSession
 			->expects($this->once())
 			->method('isLoggedIn')
 			->willReturn(false);
-		$this->initialStateService->expects($this->exactly(13))
+		$this->initialState->expects($this->exactly(14))
 			->method('provideInitialState')
 			->withConsecutive([], [], [], [
-				'core',
 				'loginAutocomplete',
 				false
 			], [
-				'core',
 				'loginRedirectUrl',
 				'login/flow'
 			]);
@@ -351,7 +332,7 @@ class LoginControllerTest extends TestCase {
 	 * @dataProvider passwordResetDataProvider
 	 */
 	public function testShowLoginFormWithPasswordResetOption($canChangePassword,
-		$expectedResult) {
+		$expectedResult): void {
 		$this->userSession
 			->expects($this->once())
 			->method('isLoggedIn')
@@ -378,14 +359,12 @@ class LoginControllerTest extends TestCase {
 			->method('get')
 			->with('LdapUser')
 			->willReturn($user);
-		$this->initialStateService->expects($this->exactly(12))
+		$this->initialState->expects($this->exactly(13))
 			->method('provideInitialState')
 			->withConsecutive([], [], [
-				'core',
 				'loginUsername',
 				'LdapUser'
 			], [], [], [], [
-				'core',
 				'loginCanResetPassword',
 				$expectedResult
 			]);
@@ -402,7 +381,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expectedResponse, $this->loginController->showLoginForm('LdapUser', ''));
 	}
 
-	public function testShowLoginFormForUserNamed0() {
+	public function testShowLoginFormForUserNamed0(): void {
 		$this->userSession
 			->expects($this->once())
 			->method('isLoggedIn')
@@ -428,18 +407,15 @@ class LoginControllerTest extends TestCase {
 			->method('get')
 			->with('0')
 			->willReturn($user);
-		$this->initialStateService->expects($this->exactly(12))
+		$this->initialState->expects($this->exactly(13))
 			->method('provideInitialState')
 			->withConsecutive([], [], [], [
-				'core',
 				'loginAutocomplete',
 				true
 			], [], [
-				'core',
 				'loginResetPasswordLink',
 				false
 			], [
-				'core',
 				'loginCanResetPassword',
 				false
 			]);
@@ -492,7 +468,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $response);
 	}
 
-	public function testLoginWithValidCredentials() {
+	public function testLoginWithValidCredentials(): void {
 		$user = 'MyUserName';
 		$password = 'secret';
 		$loginChain = $this->createMock(LoginChain::class);
@@ -544,11 +520,10 @@ class LoginControllerTest extends TestCase {
 		$response = $this->loginController->tryLogin($loginChain, 'Jane', $password, $originalUrl);
 
 		$expected = new RedirectResponse('');
-		$expected->throttle(['user' => 'Jane']);
 		$this->assertEquals($expected, $response);
 	}
 
-	public function testLoginWithoutPassedCsrfCheckAndLoggedIn() {
+	public function testLoginWithoutPassedCsrfCheckAndLoggedIn(): void {
 		/** @var IUser|MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$user->expects($this->any())
@@ -585,7 +560,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $response);
 	}
 
-	public function testLoginWithValidCredentialsAndRedirectUrl() {
+	public function testLoginWithValidCredentialsAndRedirectUrl(): void {
 		$user = 'MyUserName';
 		$password = 'secret';
 		$redirectUrl = 'https://next.cloud/apps/mail';
@@ -619,7 +594,7 @@ class LoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $response);
 	}
 
-	public function testToNotLeakLoginName() {
+	public function testToNotLeakLoginName(): void {
 		$loginChain = $this->createMock(LoginChain::class);
 		$this->request
 			->expects($this->once())

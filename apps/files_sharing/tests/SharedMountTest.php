@@ -1,31 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing\Tests;
 
@@ -88,7 +65,7 @@ class SharedMountTest extends TestCase {
 	/**
 	 * test if the mount point moves up if the parent folder no longer exists
 	 */
-	public function testShareMountLoseParentFolder() {
+	public function testShareMountLoseParentFolder(): void {
 
 		// share to user
 		$share = $this->share(
@@ -120,7 +97,7 @@ class SharedMountTest extends TestCase {
 	/**
 	 * @medium
 	 */
-	public function testDeleteParentOfMountPoint() {
+	public function testDeleteParentOfMountPoint(): void {
 		// share to user
 		$share = $this->share(
 			IShare::TYPE_USER,
@@ -160,7 +137,7 @@ class SharedMountTest extends TestCase {
 		$this->view->unlink($this->folder);
 	}
 
-	public function testMoveSharedFile() {
+	public function testMoveSharedFile(): void {
 		$share = $this->share(
 			IShare::TYPE_USER,
 			$this->filename,
@@ -194,7 +171,7 @@ class SharedMountTest extends TestCase {
 	 * share file with a group if a user renames the file the filename should not change
 	 * for the other users
 	 */
-	public function testMoveGroupShare() {
+	public function testMoveGroupShare(): void {
 		$testGroup = $this->groupManager->createGroup('testGroup');
 		$user1 = $this->userManager->get(self::TEST_FILES_SHARING_API_USER1);
 		$user2 = $this->userManager->get(self::TEST_FILES_SHARING_API_USER2);
@@ -246,7 +223,7 @@ class SharedMountTest extends TestCase {
 	 * @param string $expectedResult
 	 * @param bool $exception if a exception is expected
 	 */
-	public function testStripUserFilesPath($path, $expectedResult, $exception) {
+	public function testStripUserFilesPath($path, $expectedResult, $exception): void {
 		$testClass = new DummyTestClassSharedMount(null, null);
 		try {
 			$result = $testClass->stripUserFilesPathDummy($path);
@@ -275,7 +252,7 @@ class SharedMountTest extends TestCase {
 	 * If the permissions on a group share are upgraded be sure to still respect
 	 * removed shares by a member of that group
 	 */
-	public function testPermissionUpgradeOnUserDeletedGroupShare() {
+	public function testPermissionUpgradeOnUserDeletedGroupShare(): void {
 		$testGroup = $this->groupManager->createGroup('testGroup');
 		$user1 = $this->userManager->get(self::TEST_FILES_SHARING_API_USER1);
 		$user2 = $this->userManager->get(self::TEST_FILES_SHARING_API_USER2);
@@ -337,7 +314,7 @@ class SharedMountTest extends TestCase {
 	/**
 	 * test if the mount point gets renamed if a folder exists at the target
 	 */
-	public function testShareMountOverFolder() {
+	public function testShareMountOverFolder(): void {
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER2);
 		$this->view2->mkdir('bar');
 
@@ -372,7 +349,7 @@ class SharedMountTest extends TestCase {
 	/**
 	 * test if the mount point gets renamed if another share exists at the target
 	 */
-	public function testShareMountOverShare() {
+	public function testShareMountOverShare(): void {
 		// create a shared cache
 		$caches = [];
 		$cacheFactory = $this->createMock(ICacheFactory::class);
@@ -394,7 +371,7 @@ class SharedMountTest extends TestCase {
 		// hack to overwrite the cache factory, we can't use the proper "overwriteService" since the mount provider is created before this test is called
 		$mountProvider = \OCP\Server::get(MountProvider::class);
 		$reflectionClass = new \ReflectionClass($mountProvider);
-		$reflectionCacheFactory = $reflectionClass->getProperty("cacheFactory");
+		$reflectionCacheFactory = $reflectionClass->getProperty('cacheFactory');
 		$reflectionCacheFactory->setAccessible(true);
 		$reflectionCacheFactory->setValue($mountProvider, $cacheFactory);
 

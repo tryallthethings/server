@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-
+#
+# SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+# SPDX-FileCopyrightText: 2015-2016 ownCloud, Inc.
+# SPDX-License-Identifier: AGPL-3.0-only
+#
 OC_PATH=../../
 OCC=${OC_PATH}occ
 TAGS=""
@@ -37,7 +41,7 @@ echo $PORT
 
 echo "" > phpserver.log
 
-php -S localhost:$PORT -t ../.. &> phpserver.log &
+PHP_CLI_SERVER_WORKERS=2 php -S localhost:$PORT -t ../.. &> phpserver.log &
 PHPPID=$!
 echo $PHPPID
 

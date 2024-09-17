@@ -1,29 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_External\Tests\Controller;
 
@@ -91,7 +70,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		return $authMech;
 	}
 
-	public function testAddStorage() {
+	public function testAddStorage(): void {
 		$authMech = $this->getAuthMechMock();
 		$authMech->method('validateStorage')
 			->willReturn(true);
@@ -132,7 +111,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals($storageConfig->jsonSerialize(), $data);
 	}
 
-	public function testAddLocalStorageWhenDisabled() {
+	public function testAddLocalStorageWhenDisabled(): void {
 		$authMech = $this->getAuthMechMock();
 		$backend = $this->getBackendMock();
 
@@ -162,7 +141,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
-	public function testUpdateStorage() {
+	public function testUpdateStorage(): void {
 		$authMech = $this->getAuthMechMock();
 		$authMech->method('validateStorage')
 			->willReturn(true);
@@ -215,7 +194,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 	/**
 	 * @dataProvider mountPointNamesProvider
 	 */
-	public function testAddOrUpdateStorageInvalidMountPoint($mountPoint) {
+	public function testAddOrUpdateStorageInvalidMountPoint($mountPoint): void {
 		$storageConfig = new StorageConfig(1);
 		$storageConfig->setMountPoint($mountPoint);
 		$storageConfig->setBackend($this->getBackendMock());
@@ -258,7 +237,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 	}
 
-	public function testAddOrUpdateStorageInvalidBackend() {
+	public function testAddOrUpdateStorageInvalidBackend(): void {
 		$this->service->expects($this->exactly(2))
 			->method('createStorage')
 			->will($this->throwException(new \InvalidArgumentException()));
@@ -295,7 +274,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 	}
 
-	public function testUpdateStorageNonExisting() {
+	public function testUpdateStorageNonExisting(): void {
 		$authMech = $this->getAuthMechMock();
 		$authMech->method('validateStorage')
 			->willReturn(true);
@@ -335,7 +314,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}
 
-	public function testDeleteStorage() {
+	public function testDeleteStorage(): void {
 		$this->service->expects($this->once())
 			->method('removeStorage');
 
@@ -343,7 +322,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_NO_CONTENT, $response->getStatus());
 	}
 
-	public function testDeleteStorageNonExisting() {
+	public function testDeleteStorageNonExisting(): void {
 		$this->service->expects($this->once())
 			->method('removeStorage')
 			->will($this->throwException(new NotFoundException()));
@@ -352,7 +331,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 		$this->assertEquals(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}
 
-	public function testGetStorage() {
+	public function testGetStorage(): void {
 		$backend = $this->getBackendMock();
 		$authMech = $this->getAuthMechMock();
 		$storageConfig = new StorageConfig(1);
@@ -386,7 +365,7 @@ abstract class StoragesControllerTest extends \Test\TestCase {
 	/**
 	 * @dataProvider validateStorageProvider
 	 */
-	public function testValidateStorage($backendValidate, $authMechValidate, $expectSuccess) {
+	public function testValidateStorage($backendValidate, $authMechValidate, $expectSuccess): void {
 		$backend = $this->getBackendMock();
 		$backend->method('validateStorage')
 			->willReturn($backendValidate);

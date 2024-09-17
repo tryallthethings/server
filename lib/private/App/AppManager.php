@@ -1,44 +1,11 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Christoph Schaefer "christophł@wolkesicher.de"
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Daniel Rudolf <github.com@daniel-rudolf.de>
- * @author Greta Doci <gretadoci@gmail.com>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Julius Haertl <jus@bitgrid.net>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Maxence Lange <maxence@artificial-owl.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Tobia De Koninck <tobia@ledfan.be>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\App;
 
-use InvalidArgumentException;
 use OC\AppConfig;
 use OC\AppFramework\Bootstrap\Coordinator;
 use OC\ServerNotAvailableException;
@@ -56,6 +23,7 @@ use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
+use OCP\INavigationManager;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -97,16 +65,29 @@ class AppManager implements IAppManager {
 	/** @var array<string, true> */
 	private array $loadedApps = [];
 
+	private ?AppConfig $appConfig = null;
+	private ?IURLGenerator $urlGenerator = null;
+	private ?INavigationManager $navigationManager = null;
+
+	/**
+	 * Be extremely careful when injecting classes here. The AppManager is used by the installer,
+	 * so it needs to work before installation. See how AppConfig and IURLGenerator are injected for reference
+	 */
 	public function __construct(
 		private IUserSession $userSession,
 		private IConfig $config,
-		private AppConfig $appConfig,
 		private IGroupManager $groupManager,
 		private ICacheFactory $memCacheFactory,
 		private IEventDispatcher $dispatcher,
 		private LoggerInterface $logger,
-		private IURLGenerator $urlGenerator,
 	) {
+	}
+
+	private function getNavigationManager(): INavigationManager {
+		if ($this->navigationManager === null) {
+			$this->navigationManager = \OCP\Server::get(INavigationManager::class);
+		}
+		return $this->navigationManager;
 	}
 
 	public function getAppIcon(string $appId, bool $dark = false): ?string {
@@ -114,7 +95,7 @@ class AppManager implements IAppManager {
 		$icon = null;
 		foreach ($possibleIcons as $iconName) {
 			try {
-				$icon = $this->urlGenerator->imagePath($appId, $iconName);
+				$icon = $this->getUrlGenerator()->imagePath($appId, $iconName);
 				break;
 			} catch (\RuntimeException $e) {
 				// ignore
@@ -123,12 +104,34 @@ class AppManager implements IAppManager {
 		return $icon;
 	}
 
+	private function getAppConfig(): AppConfig {
+		if ($this->appConfig !== null) {
+			return $this->appConfig;
+		}
+		if (!$this->config->getSystemValueBool('installed', false)) {
+			throw new \Exception('Nextcloud is not installed yet, AppConfig is not available');
+		}
+		$this->appConfig = \OCP\Server::get(AppConfig::class);
+		return $this->appConfig;
+	}
+
+	private function getUrlGenerator(): IURLGenerator {
+		if ($this->urlGenerator !== null) {
+			return $this->urlGenerator;
+		}
+		if (!$this->config->getSystemValueBool('installed', false)) {
+			throw new \Exception('Nextcloud is not installed yet, AppConfig is not available');
+		}
+		$this->urlGenerator = \OCP\Server::get(IURLGenerator::class);
+		return $this->urlGenerator;
+	}
+
 	/**
 	 * @return string[] $appId => $enabled
 	 */
 	private function getInstalledAppsValues(): array {
 		if (!$this->installedAppsCache) {
-			$values = $this->appConfig->getValues(false, 'enabled');
+			$values = $this->getAppConfig()->getValues(false, 'enabled');
 
 			$alwaysEnabledApps = $this->getAlwaysEnabledApps();
 			foreach ($alwaysEnabledApps as $appId) {
@@ -150,6 +153,37 @@ class AppManager implements IAppManager {
 	 */
 	public function getInstalledApps() {
 		return array_keys($this->getInstalledAppsValues());
+	}
+
+	/**
+	 * Get a list of all apps in the apps folder
+	 *
+	 * @return list<string> an array of app names (string IDs)
+	 */
+	public function getAllAppsInAppsFolders(): array {
+		$apps = [];
+
+		foreach (\OC::$APPSROOTS as $apps_dir) {
+			if (!is_readable($apps_dir['path'])) {
+				$this->logger->warning('unable to read app folder : ' . $apps_dir['path'], ['app' => 'core']);
+				continue;
+			}
+			$dh = opendir($apps_dir['path']);
+
+			if (is_resource($dh)) {
+				while (($file = readdir($dh)) !== false) {
+					if (
+						$file[0] != '.' &&
+						is_dir($apps_dir['path'] . '/' . $file) &&
+						is_file($apps_dir['path'] . '/' . $file . '/appinfo/info.xml')
+					) {
+						$apps[] = $file;
+					}
+				}
+			}
+		}
+
+		return array_values(array_unique($apps));
 	}
 
 	/**
@@ -253,7 +287,7 @@ class AppManager implements IAppManager {
 	private function getAppTypes(string $app): array {
 		//load the cache
 		if (count($this->appTypes) === 0) {
-			$this->appTypes = $this->appConfig->getValues(false, 'types') ?: [];
+			$this->appTypes = $this->getAppConfig()->getValues(false, 'types') ?: [];
 		}
 
 		if (isset($this->appTypes[$app])) {
@@ -324,7 +358,9 @@ class AppManager implements IAppManager {
 
 			if (!is_array($groupIds)) {
 				$jsonError = json_last_error();
-				$this->logger->warning('AppManger::checkAppForUser - can\'t decode group IDs: ' . print_r($enabled, true) . ' - json error code: ' . $jsonError);
+				$jsonErrorMsg = json_last_error_msg();
+				// this really should never happen (if it does, the admin should check the `enabled` key value via `occ config:list` because it's bogus for some reason)
+				$this->logger->warning('AppManager::checkAppForUser - can\'t decode group IDs listed in app\'s enabled config key: ' . print_r($enabled, true) . ' - JSON error (' . $jsonError . ') ' . $jsonErrorMsg);
 				return false;
 			}
 
@@ -350,7 +386,9 @@ class AppManager implements IAppManager {
 
 			if (!is_array($groupIds)) {
 				$jsonError = json_last_error();
-				$this->logger->warning('AppManger::checkAppForUser - can\'t decode group IDs: ' . print_r($enabled, true) . ' - json error code: ' . $jsonError);
+				$jsonErrorMsg = json_last_error_msg();
+				// this really should never happen (if it does, the admin should check the `enabled` key value via `occ config:list` because it's bogus for some reason)
+				$this->logger->warning('AppManager::checkAppForGroups - can\'t decode group IDs listed in app\'s enabled config key: ' . print_r($enabled, true) . ' - JSON error (' . $jsonError . ') ' . $jsonErrorMsg);
 				return false;
 			}
 
@@ -389,8 +427,8 @@ class AppManager implements IAppManager {
 		if ($appPath === false) {
 			return;
 		}
-		$eventLogger = \OC::$server->get(\OCP\Diagnostics\IEventLogger::class);
-		$eventLogger->start("bootstrap:load_app:$app", "Load $app");
+		$eventLogger = \OC::$server->get(IEventLogger::class);
+		$eventLogger->start("bootstrap:load_app:$app", "Load app: $app");
 
 		// in case someone calls loadApp() directly
 		\OC_App::registerAutoloading($app, $appPath);
@@ -401,8 +439,6 @@ class AppManager implements IAppManager {
 
 		$hasAppPhpFile = is_file($appPath . '/appinfo/app.php');
 
-		$eventLogger = \OC::$server->get(IEventLogger::class);
-		$eventLogger->start('bootstrap:load_app_' . $app, 'Load app: ' . $app);
 		if ($isBootable && $hasAppPhpFile) {
 			$this->logger->error('/appinfo/app.php is not loaded when \OCP\AppFramework\Bootstrap\IBootstrap on the application class is used. Migrate everything from app.php to the Application class.', [
 				'app' => $app,
@@ -541,7 +577,7 @@ class AppManager implements IAppManager {
 		}
 
 		$this->installedAppsCache[$appId] = 'yes';
-		$this->appConfig->setValue($appId, 'enabled', 'yes');
+		$this->getAppConfig()->setValue($appId, 'enabled', 'yes');
 		$this->dispatcher->dispatchTyped(new AppEnableEvent($appId));
 		$this->dispatcher->dispatch(ManagerEvent::EVENT_APP_ENABLE, new ManagerEvent(
 			ManagerEvent::EVENT_APP_ENABLE, $appId
@@ -595,7 +631,7 @@ class AppManager implements IAppManager {
 		}, $groups);
 
 		$this->installedAppsCache[$appId] = json_encode($groupIds);
-		$this->appConfig->setValue($appId, 'enabled', json_encode($groupIds));
+		$this->getAppConfig()->setValue($appId, 'enabled', json_encode($groupIds));
 		$this->dispatcher->dispatchTyped(new AppEnableEvent($appId, $groupIds));
 		$this->dispatcher->dispatch(ManagerEvent::EVENT_APP_ENABLE_FOR_GROUPS, new ManagerEvent(
 			ManagerEvent::EVENT_APP_ENABLE_FOR_GROUPS, $appId, $groups
@@ -616,7 +652,7 @@ class AppManager implements IAppManager {
 		}
 
 		if ($automaticDisabled) {
-			$previousSetting = $this->appConfig->getValue($appId, 'enabled', 'yes');
+			$previousSetting = $this->getAppConfig()->getValue($appId, 'enabled', 'yes');
 			if ($previousSetting !== 'yes' && $previousSetting !== 'no') {
 				$previousSetting = json_decode($previousSetting, true);
 			}
@@ -624,7 +660,7 @@ class AppManager implements IAppManager {
 		}
 
 		unset($this->installedAppsCache[$appId]);
-		$this->appConfig->setValue($appId, 'enabled', 'no');
+		$this->getAppConfig()->setValue($appId, 'enabled', 'no');
 
 		// run uninstall steps
 		$appData = $this->getAppInfo($appId);
@@ -642,11 +678,9 @@ class AppManager implements IAppManager {
 	/**
 	 * Get the directory for the given app.
 	 *
-	 * @param string $appId
-	 * @return string
 	 * @throws AppPathNotFoundException if app folder can't be found
 	 */
-	public function getAppPath($appId) {
+	public function getAppPath(string $appId): string {
 		$appPath = \OC_App::getAppPath($appId);
 		if ($appPath === false) {
 			throw new AppPathNotFoundException('Could not find path for ' . $appId);
@@ -689,7 +723,7 @@ class AppManager implements IAppManager {
 		$apps = $this->getInstalledApps();
 		foreach ($apps as $appId) {
 			$appInfo = $this->getAppInfo($appId);
-			$appDbVersion = $this->appConfig->getValue($appId, 'installed_version');
+			$appDbVersion = $this->getAppConfig()->getValue($appId, 'installed_version');
 			if ($appDbVersion
 				&& isset($appInfo['version'])
 				&& version_compare($appInfo['version'], $appDbVersion, '>')
@@ -823,59 +857,58 @@ class AppManager implements IAppManager {
 		return $this->defaultEnabled;
 	}
 
+	/**
+	 * @inheritdoc
+	 */
 	public function getDefaultAppForUser(?IUser $user = null, bool $withFallbacks = true): string {
-		// Set fallback to always-enabled files app
-		$appId = $withFallbacks ? 'files' : '';
-		$defaultApps = explode(',', $this->config->getSystemValueString('defaultapp', ''));
-		$defaultApps = array_filter($defaultApps);
+		$id = $this->getNavigationManager()->getDefaultEntryIdForUser($user, $withFallbacks);
+		$entry = $this->getNavigationManager()->get($id);
+		return (string)$entry['app'];
+	}
 
-		$user ??= $this->userSession->getUser();
+	/**
+	 * @inheritdoc
+	 */
+	public function getDefaultApps(): array {
+		$ids = $this->getNavigationManager()->getDefaultEntryIds();
 
-		if ($user !== null) {
-			$userDefaultApps = explode(',', $this->config->getUserValue($user->getUID(), 'core', 'defaultapp'));
-			$defaultApps = array_filter(array_merge($userDefaultApps, $defaultApps));
-			if (empty($defaultApps) && $withFallbacks) {
-				/* Fallback on user defined apporder */
-				$customOrders = json_decode($this->config->getUserValue($user->getUID(), 'core', 'apporder', '[]'), true, flags:JSON_THROW_ON_ERROR);
-				if (!empty($customOrders)) {
-					// filter only entries with app key (when added using closures or NavigationManager::add the app is not guranteed to be set)
-					$customOrders = array_filter($customOrders, fn ($entry) => isset($entry['app']));
-					// sort apps by order
-					usort($customOrders, fn ($a, $b) => $a['order'] - $b['order']);
-					// set default apps to sorted apps
-					$defaultApps = array_map(fn ($entry) => $entry['app'], $customOrders);
+		return array_values(array_unique(array_map(function (string $id) {
+			$entry = $this->getNavigationManager()->get($id);
+			return (string)$entry['app'];
+		}, $ids)));
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function setDefaultApps(array $defaultApps): void {
+		$entries = $this->getNavigationManager()->getAll();
+		$ids = [];
+		foreach ($defaultApps as $defaultApp) {
+			foreach ($entries as $entry) {
+				if ((string)$entry['app'] === $defaultApp) {
+					$ids[] = (string)$entry['id'];
+					break;
+				}
+			}
+		}
+		$this->getNavigationManager()->setDefaultEntryIds($ids);
+	}
+
+	public function isBackendRequired(string $backend): bool {
+		foreach ($this->appInfos as $appInfo) {
+			foreach ($appInfo['dependencies']['backend'] as $appBackend) {
+				if ($backend === $appBackend) {
+					return true;
 				}
 			}
 		}
 
-		if (empty($defaultApps) && $withFallbacks) {
-			$defaultApps = ['dashboard','files'];
-		}
-
-		// Find the first app that is enabled for the current user
-		foreach ($defaultApps as $defaultApp) {
-			$defaultApp = \OC_App::cleanAppId(strip_tags($defaultApp));
-			if ($this->isEnabledForUser($defaultApp, $user)) {
-				$appId = $defaultApp;
-				break;
-			}
-		}
-
-		return $appId;
+		return false;
 	}
 
-	public function getDefaultApps(): array {
-		return explode(',', $this->config->getSystemValueString('defaultapp', 'dashboard,files'));
-	}
-
-	public function setDefaultApps(array $defaultApps): void {
-		foreach ($defaultApps as $app) {
-			if (!$this->isInstalled($app)) {
-				$this->logger->debug('Can not set not installed app as default app', ['missing_app' => $app]);
-				throw new InvalidArgumentException('App is not installed');
-			}
-		}
-
-		$this->config->setSystemValue('defaultapp', join(',', $defaultApps));
+	public function cleanAppId(string $app): string {
+		// FIXME should list allowed characters instead
+		return str_replace(['<', '>', '"', "'", '\0', '/', '\\', '..'], '', $app);
 	}
 }

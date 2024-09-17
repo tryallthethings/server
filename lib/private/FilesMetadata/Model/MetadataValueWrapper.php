@@ -2,25 +2,8 @@
 
 declare(strict_types=1);
 /**
- * @copyright 2023 Maxence Lange <maxence@artificial-owl.com>
- *
- * @author Maxence Lange <maxence@artificial-owl.com>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace OC\FilesMetadata\Model;
@@ -234,7 +217,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueString(): string {
 		$this->assertType(self::TYPE_STRING);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -250,7 +233,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueInt(): int {
 		$this->assertType(self::TYPE_INT);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -266,7 +249,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueFloat(): float {
 		$this->assertType(self::TYPE_FLOAT);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -282,7 +265,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueBool(): bool {
 		$this->assertType(self::TYPE_BOOL);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -298,7 +281,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueArray(): array {
 		$this->assertType(self::TYPE_ARRAY);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -314,7 +297,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueStringList(): array {
 		$this->assertType(self::TYPE_STRING_LIST);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -330,7 +313,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 */
 	public function getValueIntList(): array {
 		$this->assertType(self::TYPE_INT_LIST);
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 
@@ -344,7 +327,7 @@ class MetadataValueWrapper implements IMetadataValueWrapper {
 	 * @since 28.0.0
 	 */
 	public function getValueAny(): mixed {
-		if (null === $this->value) {
+		if ($this->value === null) {
 			throw new FilesMetadataNotFoundException('value is not set');
 		}
 

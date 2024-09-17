@@ -1,28 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author brumsel <brumsel@losecatcher.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 class HelperTest extends \Test\TestCase {
 	private function makeFileInfo($name, $size, $mtime, $isDir = false) {
@@ -93,7 +74,7 @@ class HelperTest extends \Test\TestCase {
 	/**
 	 * @dataProvider sortDataProvider
 	 */
-	public function testSortByName(string $sort, bool $sortDescending, array $expectedOrder) {
+	public function testSortByName(string $sort, bool $sortDescending, array $expectedOrder): void {
 		if (($sort === 'mtime') && (PHP_INT_SIZE < 8)) {
 			$this->markTestSkipped('Skip mtime sorting on 32bit');
 		}
@@ -109,7 +90,7 @@ class HelperTest extends \Test\TestCase {
 		);
 	}
 
-	public function testPopulateTags() {
+	public function testPopulateTags(): void {
 		$tagManager = $this->createMock(\OCP\ITagManager::class);
 		$tagger = $this->createMock(\OCP\ITags::class);
 

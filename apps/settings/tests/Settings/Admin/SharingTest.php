@@ -1,33 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Lukas Reschke <lukas@statuscode.ch>
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\Settings\Tests\Settings\Admin;
 
@@ -48,13 +22,13 @@ class SharingTest extends TestCase {
 	private $admin;
 	/** @var IConfig */
 	private $config;
-	/** @var  IL10N|MockObject */
+	/** @var IL10N|MockObject */
 	private $l10n;
-	/** @var  IManager|MockObject */
+	/** @var IManager|MockObject */
 	private $shareManager;
 	/** @var IAppManager|MockObject */
 	private $appManager;
-	/** @var  IURLGenerator|MockObject */
+	/** @var IURLGenerator|MockObject */
 	private $urlGenerator;
 	/** @var IInitialState|MockObject */
 	private $initialState;
@@ -82,7 +56,7 @@ class SharingTest extends TestCase {
 			$this->appManager,
 			$this->urlGenerator,
 			$this->initialState,
-			"settings",
+			'settings',
 		);
 	}
 
@@ -162,9 +136,9 @@ class SharingTest extends TestCase {
 						'remoteExpireAfterNDays' => '7',
 						'enforceRemoteExpireDate' => false,
 						'allowLinksExcludeGroups' => [],
-						'passwordExcludedGroups' => [],
-						'passwordExcludedGroupsFeatureEnabled' => false,
 						'onlyShareWithGroupMembersExcludeGroupList' => [],
+						'enforceLinksPasswordExcludedGroups' => [],
+						'enforceLinksPasswordExcludedGroupsEnabled' => false,
 					]
 				],
 			);
@@ -255,9 +229,9 @@ class SharingTest extends TestCase {
 						'remoteExpireAfterNDays' => '7',
 						'enforceRemoteExpireDate' => false,
 						'allowLinksExcludeGroups' => [],
-						'passwordExcludedGroups' => [],
-						'passwordExcludedGroupsFeatureEnabled' => false,
 						'onlyShareWithGroupMembersExcludeGroupList' => [],
+						'enforceLinksPasswordExcludedGroups' => [],
+						'enforceLinksPasswordExcludedGroupsEnabled' => false,
 					]
 				],
 			);

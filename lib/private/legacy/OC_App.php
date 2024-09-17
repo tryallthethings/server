@@ -1,56 +1,11 @@
 <?php
 
 declare(strict_types=1);
-
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- * @copyright Copyright (c) 2016, Lukas Reschke <lukas@statuscode.ch>
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bart Visscher <bartv@thisnet.nl>
- * @author Bernhard Posselt <dev@bernhard-posselt.com>
- * @author Borjan Tchakaloff <borjan@tchakaloff.fr>
- * @author Brice Maron <brice@bmaron.net>
- * @author Christopher Schäpers <kondou@ts.unde.re>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Rudolf <github.com@daniel-rudolf.de>
- * @author Frank Karlitschek <frank@karlitschek.de>
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Jakob Sack <mail@jakobsack.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Julius Haertl <jus@bitgrid.net>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Kamil Domanski <kdomanski@kdemail.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Markus Goetz <markus@woboq.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author RealRancor <Fisch.666@gmx.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Sam Tuke <mail@samtuke.com>
- * @author Sebastian Wessalowski <sebastian@wessalowski.org>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Thomas Tanghus <thomas@tanghus.net>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
-
 use OC\App\DependencyAnalyzer;
 use OC\App\Platform;
 use OC\AppFramework\Bootstrap\Coordinator;
@@ -64,17 +19,17 @@ use OCP\App\ManagerEvent;
 use OCP\Authentication\IAlternativeLogin;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
+use OCP\Server;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Log\LoggerInterface;
+use function OCP\Log\logger;
 
 /**
  * This class manages the apps. It allows them to register and integrate in the
- * ownCloud ecosystem. Furthermore, this class is responsible for installing,
+ * Nextcloud ecosystem. Furthermore, this class is responsible for installing,
  * upgrading and removing apps.
  */
 class OC_App {
-	private static $adminForms = [];
-	private static $personalForms = [];
 	private static $altLogin = [];
 	private static $alreadyRegistered = [];
 	public const supportedApp = 300;
@@ -88,8 +43,7 @@ class OC_App {
 	 * @psalm-taint-escape html
 	 * @psalm-taint-escape has_quotes
 	 *
-	 * @param string $app AppId that needs to be cleaned
-	 * @return string
+	 * @deprecated 31.0.0 use IAppManager::cleanAppId
 	 */
 	public static function cleanAppId(string $app): string {
 		return str_replace(['<', '>', '"', "'", '\0', '/', '\\', '..'], '', $app);
@@ -112,7 +66,7 @@ class OC_App {
 	 * @param string[] $types
 	 * @return bool
 	 *
-	 * This function walks through the ownCloud directory and loads all apps
+	 * This function walks through the Nextcloud directory and loads all apps
 	 * it can find. A directory contains an app if the file /appinfo/info.xml
 	 * exists.
 	 *
@@ -214,7 +168,7 @@ class OC_App {
 	 *
 	 * @param bool $forceRefresh whether to refresh the cache
 	 * @param bool $all whether to return apps for all users, not only the
-	 * currently logged in one
+	 *                  currently logged in one
 	 * @return string[]
 	 */
 	public static function getEnabledApps(bool $forceRefresh = false, bool $all = false): array {
@@ -298,11 +252,13 @@ class OC_App {
 
 
 	/**
-	 * search for an app in all app-directories
+	 * Find the apps root for an app id.
+	 *
+	 * If multiple copies are found, the apps root the latest version is returned.
 	 *
 	 * @param string $appId
 	 * @param bool $ignoreCache ignore cache and rebuild it
-	 * @return false|string
+	 * @return false|array{path: string, url: string} the apps root shape
 	 */
 	public static function findAppInDirectories(string $appId, bool $ignoreCache = false) {
 		$sanitizedAppId = self::cleanAppId($appId);
@@ -354,7 +310,7 @@ class OC_App {
 	 * @param string $appId
 	 * @param bool $refreshAppPath should be set to true only during install/upgrade
 	 * @return string|false
-	 * @deprecated 11.0.0 use \OC::$server->getAppManager()->getAppPath()
+	 * @deprecated 11.0.0 use \OCP\Server::get(IAppManager)->getAppPath()
 	 */
 	public static function getAppPath(string $appId, bool $refreshAppPath = false) {
 		if ($appId === null || trim($appId) === '') {
@@ -428,28 +384,6 @@ class OC_App {
 	}
 
 	/**
-	 * @param string $type
-	 * @return array
-	 */
-	public static function getForms(string $type): array {
-		$forms = [];
-		switch ($type) {
-			case 'admin':
-				$source = self::$adminForms;
-				break;
-			case 'personal':
-				$source = self::$personalForms;
-				break;
-			default:
-				return [];
-		}
-		foreach ($source as $form) {
-			$forms[] = include $form;
-		}
-		return $forms;
-	}
-
-	/**
 	 * @param array $entry
 	 * @deprecated 20.0.0 Please register your alternative login option using the registerAlternativeLogin() on the RegistrationContext in your Application class implementing the OCP\Authentication\IAlternativeLogin interface
 	 */
@@ -510,30 +444,10 @@ class OC_App {
 	 * get a list of all apps in the apps folder
 	 *
 	 * @return string[] an array of app names (string IDs)
-	 * @todo: change the name of this method to getInstalledApps, which is more accurate
+	 * @deprecated 31.0.0 Use IAppManager::getAllAppsInAppsFolders instead
 	 */
 	public static function getAllApps(): array {
-		$apps = [];
-
-		foreach (OC::$APPSROOTS as $apps_dir) {
-			if (!is_readable($apps_dir['path'])) {
-				\OCP\Server::get(LoggerInterface::class)->warning('unable to read app folder : ' . $apps_dir['path'], ['app' => 'core']);
-				continue;
-			}
-			$dh = opendir($apps_dir['path']);
-
-			if (is_resource($dh)) {
-				while (($file = readdir($dh)) !== false) {
-					if ($file[0] != '.' and is_dir($apps_dir['path'] . '/' . $file) and is_file($apps_dir['path'] . '/' . $file . '/appinfo/info.xml')) {
-						$apps[] = $file;
-					}
-				}
-			}
-		}
-
-		$apps = array_unique($apps);
-
-		return $apps;
+		return \OCP\Server::get(IAppManager::class)->getAllAppsInAppsFolders();
 	}
 
 	/**
@@ -554,9 +468,9 @@ class OC_App {
 	 * @return array
 	 */
 	public function listAllApps(): array {
-		$installedApps = OC_App::getAllApps();
-
 		$appManager = \OC::$server->getAppManager();
+
+		$installedApps = $appManager->getAllAppsInAppsFolders();
 		//we don't want to show configuration for these
 		$blacklist = $appManager->getAlwaysEnabledApps();
 		$appList = [];
@@ -673,7 +587,7 @@ class OC_App {
 	}
 
 	/**
-	 * Check whether the current ownCloud version matches the given
+	 * Check whether the current Nextcloud version matches the given
 	 * application's version requirements.
 	 *
 	 * The comparison is made based on the number of parts that the
@@ -683,7 +597,7 @@ class OC_App {
 	 * This means that it's possible to specify "requiremin" => 6
 	 * and "requiremax" => 6 and it will still match ownCloud 6.0.3.
 	 *
-	 * @param string $ocVersion ownCloud version to check against
+	 * @param string $ocVersion Nextcloud version to check against
 	 * @param array $appInfo app info (from xml)
 	 *
 	 * @return boolean true if compatible, otherwise false
@@ -822,16 +736,16 @@ class OC_App {
 		// load the app
 		self::loadApp($appId);
 
-		$dispatcher = \OC::$server->get(IEventDispatcher::class);
+		$dispatcher = Server::get(IEventDispatcher::class);
 
 		// load the steps
-		$r = \OCP\Server::get(Repair::class);
+		$r = Server::get(Repair::class);
 		foreach ($steps as $step) {
 			try {
 				$r->addStep($step);
 			} catch (Exception $ex) {
 				$dispatcher->dispatchTyped(new RepairErrorEvent($ex->getMessage()));
-				\OC::$server->getLogger()->logException($ex);
+				logger('core')->error('Failed to add app migration step ' . $step, ['exception' => $ex]);
 			}
 		}
 		// run the steps
@@ -927,7 +841,7 @@ class OC_App {
 		} elseif ($englishFallback !== false) {
 			return $englishFallback;
 		}
-		return (string) $fallback;
+		return (string)$fallback;
 	}
 
 	/**

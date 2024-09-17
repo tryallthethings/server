@@ -1,26 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Joas Schilling <coding@schilljs.com>
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 namespace OCA\WorkflowEngine\Tests\Check;
 
@@ -72,7 +53,7 @@ class AbstractStringCheckTest extends \Test\TestCase {
 	 * @param string $actualValue
 	 * @param bool $expected
 	 */
-	public function testExecuteStringCheck($operation, $checkValue, $actualValue, $expected) {
+	public function testExecuteStringCheck($operation, $checkValue, $actualValue, $expected): void {
 		$check = $this->getCheckMock();
 
 		/** @var \OCA\WorkflowEngine\Check\AbstractStringCheck $check */
@@ -93,7 +74,7 @@ class AbstractStringCheckTest extends \Test\TestCase {
 	 * @param string $operator
 	 * @param string $value
 	 */
-	public function testValidateCheck($operator, $value) {
+	public function testValidateCheck($operator, $value): void {
 		$check = $this->getCheckMock();
 
 		/** @var \OCA\WorkflowEngine\Check\AbstractStringCheck $check */
@@ -118,7 +99,7 @@ class AbstractStringCheckTest extends \Test\TestCase {
 	 * @param $exceptionCode
 	 * @param $exceptionMessage
 	 */
-	public function testValidateCheckInvalid($operator, $value, $exceptionCode, $exceptionMessage) {
+	public function testValidateCheckInvalid($operator, $value, $exceptionCode, $exceptionMessage): void {
 		$check = $this->getCheckMock();
 
 		try {
@@ -144,7 +125,7 @@ class AbstractStringCheckTest extends \Test\TestCase {
 	 * @param array[] $matches
 	 * @param bool $expected
 	 */
-	public function testMatch($pattern, $subject, $matches, $expected) {
+	public function testMatch($pattern, $subject, $matches, $expected): void {
 		$check = $this->getCheckMock();
 
 		$this->invokePrivate($check, 'matches', [$matches]);

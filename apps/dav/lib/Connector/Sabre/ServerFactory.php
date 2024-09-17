@@ -1,41 +1,20 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\DAV\Connector\Sabre;
 
 use OCA\DAV\AppInfo\PluginManager;
+use OCA\DAV\CalDAV\DefaultCalendarValidator;
 use OCA\DAV\DAV\ViewOnlyPlugin;
-use OCA\DAV\Files\BrowserErrorPagePlugin;
+use OCA\DAV\Files\ErrorPagePlugin;
+use OCA\Theming\ThemingDefaults;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Folder;
+use OCP\Files\IFilenameValidator;
 use OCP\Files\Mount\IMountManager;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -100,7 +79,10 @@ class ServerFactory {
 
 		// Load plugins
 		$server->addPlugin(new \OCA\DAV\Connector\Sabre\MaintenancePlugin($this->config, $this->l10n));
-		$server->addPlugin(new \OCA\DAV\Connector\Sabre\BlockLegacyClientPlugin($this->config));
+		$server->addPlugin(new BlockLegacyClientPlugin(
+			\OCP\Server::get(IConfig::class),
+			\OCP\Server::get(ThemingDefaults::class),
+		));
 		$server->addPlugin(new \OCA\DAV\Connector\Sabre\AnonymousOptionsPlugin());
 		$server->addPlugin($authPlugin);
 		// FIXME: The following line is a workaround for legacy components relying on being able to send a GET to /
@@ -120,9 +102,7 @@ class ServerFactory {
 			$server->addPlugin(new \OCA\DAV\Connector\Sabre\FakeLockerPlugin());
 		}
 
-		if (BrowserErrorPagePlugin::isBrowserRequest($this->request)) {
-			$server->addPlugin(new BrowserErrorPagePlugin());
-		}
+		$server->addPlugin(new ErrorPagePlugin($this->request, $this->config));
 
 		// wait with registering these until auth is handled and the filesystem is setup
 		$server->on('beforeMethod:*', function () use ($server, $objectTree, $viewCallBack) {
@@ -152,6 +132,7 @@ class ServerFactory {
 					$this->request,
 					$this->previewManager,
 					$this->userSession,
+					\OCP\Server::get(IFilenameValidator::class),
 					false,
 					!$this->config->getSystemValue('debug', false)
 				)
@@ -191,7 +172,8 @@ class ServerFactory {
 							$server,
 							$objectTree,
 							$this->databaseConnection,
-							$this->userSession->getUser()
+							$this->userSession->getUser(),
+							\OC::$server->get(DefaultCalendarValidator::class),
 						)
 					)
 				);

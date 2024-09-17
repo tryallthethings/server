@@ -2,24 +2,8 @@
 
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2024, Maxence Lange <maxence@artificial-owl.com>
- *
- * @author Maxence Lange <maxence@artificial-owl.com>
- *
- * @license AGPL-3.0 or later
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace Test;
 
@@ -48,7 +32,7 @@ class AppConfigTest extends TestCase {
 
 	/**
 	 * @var array<string, array<array<string, string, int, bool, bool>>>
-	 *     [appId => [configKey, configValue, valueType, lazy, sensitive]]
+	 *                                                                   [appId => [configKey, configValue, valueType, lazy, sensitive]]
 	 */
 	private array $baseStruct =
 		[
@@ -184,7 +168,7 @@ class AppConfigTest extends TestCase {
 
 	/**
 	 * @param bool $preLoading TRUE will preload the 'fast' cache, which is the normal behavior of usual
-	 *     IAppConfig
+	 *                         IAppConfig
 	 *
 	 * @return IAppConfig
 	 */
@@ -386,6 +370,21 @@ class AppConfigTest extends TestCase {
 		$config->isLazy('unknown-app', 'inexistant-key');
 	}
 
+	public function testGetAllValues(): void {
+		$config = $this->generateAppConfig();
+		$this->assertEquals(
+			[
+				'array' => ['test' => 1],
+				'bool' => true,
+				'float' => 3.14,
+				'int' => 42,
+				'mixed' => 'mix',
+				'string' => 'value',
+			],
+			$config->getAllValues('typed')
+		);
+	}
+
 	public function testGetAllValuesWithEmptyApp(): void {
 		$config = $this->generateAppConfig();
 		$this->expectException(InvalidArgumentException::class);
@@ -439,7 +438,7 @@ class AppConfigTest extends TestCase {
 		$this->assertSame('value', $config->getValueString('non-sensitive-app', 'non-lazy-key', 'default', lazy: true));
 	}
 
-	public function testGetValueInt() {
+	public function testGetValueInt(): void {
 		$config = $this->generateAppConfig();
 		$this->assertSame(42, $config->getValueInt('typed', 'int', 0));
 	}
@@ -449,7 +448,7 @@ class AppConfigTest extends TestCase {
 		$this->assertSame(1, $config->getValueInt('typed-1', 'int', 1));
 	}
 
-	public function testGetValueIntOnNonExistentKeyReturnsDefault() {
+	public function testGetValueIntOnNonExistentKeyReturnsDefault(): void {
 		$config = $this->generateAppConfig();
 		$this->assertSame(2, $config->getValueInt('typed', 'int-2', 2));
 	}
@@ -460,7 +459,7 @@ class AppConfigTest extends TestCase {
 		$config->getValueInt('typed', 'float');
 	}
 
-	public function testGetValueFloat() {
+	public function testGetValueFloat(): void {
 		$config = $this->generateAppConfig();
 		$this->assertSame(3.14, $config->getValueFloat('typed', 'float', 0));
 	}
@@ -470,7 +469,7 @@ class AppConfigTest extends TestCase {
 		$this->assertSame(1.11, $config->getValueFloat('typed-1', 'float', 1.11));
 	}
 
-	public function testGetValueFloatOnNonExistentKeyReturnsDefault() {
+	public function testGetValueFloatOnNonExistentKeyReturnsDefault(): void {
 		$config = $this->generateAppConfig();
 		$this->assertSame(2.22, $config->getValueFloat('typed', 'float-2', 2.22));
 	}
@@ -1238,7 +1237,7 @@ class AppConfigTest extends TestCase {
 			[
 				'app' => 'sensitive-app',
 				'key' => 'lazy-key',
-				'value' => $this->baseStruct['sensitive-app']['lazy-key']['encrypted'],
+				'value' => 'value',
 				'type' => 4,
 				'lazy' => true,
 				'typeString' => 'string',
@@ -1368,7 +1367,7 @@ class AppConfigTest extends TestCase {
 		$key = self::getUniqueID('secret');
 
 		$appConfig = $this->generateAppConfig();
-		$secret = md5((string) time());
+		$secret = md5((string)time());
 		$appConfig->setValueString('testapp', $key, $secret, sensitive: true);
 
 		$this->assertConfigValueNotEquals('testapp', $key, $secret);
@@ -1386,7 +1385,7 @@ class AppConfigTest extends TestCase {
 	public function testMigratingNonSensitiveValueToSensitiveWithSetValue(): void {
 		$key = self::getUniqueID('secret');
 		$appConfig = $this->generateAppConfig();
-		$secret = sha1((string) time());
+		$secret = sha1((string)time());
 
 		// Unencrypted
 		$appConfig->setValueString('testapp', $key, $secret);
@@ -1414,7 +1413,7 @@ class AppConfigTest extends TestCase {
 	public function testUpdateSensitiveValueToNonSensitiveWithUpdateSensitive(): void {
 		$key = self::getUniqueID('secret');
 		$appConfig = $this->generateAppConfig();
-		$secret = sha1((string) time());
+		$secret = sha1((string)time());
 
 		// Encrypted
 		$appConfig->setValueString('testapp', $key, $secret, sensitive: true);
@@ -1428,7 +1427,7 @@ class AppConfigTest extends TestCase {
 	public function testUpdateNonSensitiveValueToSensitiveWithUpdateSensitive(): void {
 		$key = self::getUniqueID('secret');
 		$appConfig = $this->generateAppConfig();
-		$secret = sha1((string) time());
+		$secret = sha1((string)time());
 
 		// Unencrypted
 		$appConfig->setValueString('testapp', $key, $secret);

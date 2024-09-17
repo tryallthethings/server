@@ -1,22 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Lukas Reschke <lukas@statuscode.ch>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Tests\Core\Controller;
@@ -117,7 +102,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		);
 	}
 
-	public function testShowAuthPickerPageNoClientOrOauthRequest() {
+	public function testShowAuthPickerPageNoClientOrOauthRequest(): void {
 		$expected = new StandaloneTemplateResponse(
 			'core',
 			'error',
@@ -136,7 +121,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->showAuthPickerPage());
 	}
 
-	public function testShowAuthPickerPageWithOcsHeader() {
+	public function testShowAuthPickerPageWithOcsHeader(): void {
 		$this->request
 			->method('getHeader')
 			->withConsecutive(
@@ -198,7 +183,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->showAuthPickerPage());
 	}
 
-	public function testShowAuthPickerPageWithOauth() {
+	public function testShowAuthPickerPageWithOauth(): void {
 		$this->request
 			->method('getHeader')
 			->withConsecutive(
@@ -268,7 +253,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->showAuthPickerPage('MyClientIdentifier'));
 	}
 
-	public function testGenerateAppPasswordWithInvalidToken() {
+	public function testGenerateAppPasswordWithInvalidToken(): void {
 		$this->session
 			->expects($this->once())
 			->method('get')
@@ -291,7 +276,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->generateAppPassword('MyStateToken'));
 	}
 
-	public function testGenerateAppPasswordWithSessionNotAvailableException() {
+	public function testGenerateAppPasswordWithSessionNotAvailableException(): void {
 		$this->session
 			->expects($this->once())
 			->method('get')
@@ -311,7 +296,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->generateAppPassword('MyStateToken'));
 	}
 
-	public function testGenerateAppPasswordWithInvalidTokenException() {
+	public function testGenerateAppPasswordWithInvalidTokenException(): void {
 		$this->session
 			->expects($this->once())
 			->method('get')
@@ -336,7 +321,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->generateAppPassword('MyStateToken'));
 	}
 
-	public function testGeneratePasswordWithPassword() {
+	public function testGeneratePasswordWithPassword(): void {
 		$this->session
 			->expects($this->once())
 			->method('get')
@@ -420,7 +405,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 	 * ["https://example.com/redirect.php?hello=world", "https://example.com/redirect.php?hello=world&state=MyOauthState&code=MyAccessCode"]
 	 *
 	 */
-	public function testGeneratePasswordWithPasswordForOauthClient($redirectUri, $redirectUrl) {
+	public function testGeneratePasswordWithPasswordForOauthClient($redirectUri, $redirectUrl): void {
 		$this->session
 			->method('get')
 			->withConsecutive(
@@ -505,7 +490,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 		$this->assertEquals($expected, $this->clientFlowLoginController->generateAppPassword('MyStateToken', 'MyClientIdentifier'));
 	}
 
-	public function testGeneratePasswordWithoutPassword() {
+	public function testGeneratePasswordWithoutPassword(): void {
 		$this->session
 			->expects($this->once())
 			->method('get')
@@ -636,7 +621,7 @@ class ClientFlowLoginControllerTest extends TestCase {
 	 * @param string $protocol
 	 * @param string $expected
 	 */
-	public function testGeneratePasswordWithHttpsProxy(array $headers, $protocol, $expected) {
+	public function testGeneratePasswordWithHttpsProxy(array $headers, $protocol, $expected): void {
 		$this->session
 			->expects($this->once())
 			->method('get')

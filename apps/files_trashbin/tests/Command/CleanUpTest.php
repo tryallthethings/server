@@ -1,28 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Trashbin\Tests\Command;
 
@@ -45,7 +25,7 @@ use Test\TestCase;
  */
 class CleanUpTest extends TestCase {
 
-	/** @var  CleanUp */
+	/** @var CleanUp */
 	protected $cleanup;
 
 	/** @var \PHPUnit\Framework\MockObject\MockObject | Manager */
@@ -57,10 +37,10 @@ class CleanUpTest extends TestCase {
 	/** @var IDBConnection */
 	protected $dbConnection;
 
-	/** @var  string */
+	/** @var string */
 	protected $trashTable = 'files_trash';
 
-	/** @var string  */
+	/** @var string */
 	protected $user0 = 'user0';
 
 	protected function setUp(): void {
@@ -102,7 +82,7 @@ class CleanUpTest extends TestCase {
 	 * @dataProvider dataTestRemoveDeletedFiles
 	 * @param boolean $nodeExists
 	 */
-	public function testRemoveDeletedFiles(bool $nodeExists) {
+	public function testRemoveDeletedFiles(bool $nodeExists): void {
 		$this->initTable();
 		$this->rootFolder
 			->method('nodeExists')
@@ -157,7 +137,7 @@ class CleanUpTest extends TestCase {
 	/**
 	 * test remove deleted files from users given as parameter
 	 */
-	public function testExecuteDeleteListOfUsers() {
+	public function testExecuteDeleteListOfUsers(): void {
 		$userIds = ['user1', 'user2', 'user3'];
 		$instance = $this->getMockBuilder('OCA\Files_Trashbin\Command\CleanUp')
 			->setMethods(['removeDeletedFiles'])
@@ -188,7 +168,7 @@ class CleanUpTest extends TestCase {
 	/**
 	 * test remove deleted files of all users
 	 */
-	public function testExecuteAllUsers() {
+	public function testExecuteAllUsers(): void {
 		$userIds = [];
 		$backendUsers = ['user1', 'user2'];
 		$instance = $this->getMockBuilder('OCA\Files_Trashbin\Command\CleanUp')
@@ -220,7 +200,7 @@ class CleanUpTest extends TestCase {
 		$this->invokePrivate($instance, 'execute', [$inputInterface, $outputInterface]);
 	}
 
-	public function testExecuteNoUsersAndNoAllUsers() {
+	public function testExecuteNoUsersAndNoAllUsers(): void {
 		$inputInterface = $this->createMock(InputInterface::class);
 		$inputInterface->method('getArgument')
 			->with('user_id')
@@ -238,7 +218,7 @@ class CleanUpTest extends TestCase {
 		$this->invokePrivate($this->cleanup, 'execute', [$inputInterface, $outputInterface]);
 	}
 
-	public function testExecuteUsersAndAllUsers() {
+	public function testExecuteUsersAndAllUsers(): void {
 		$inputInterface = $this->createMock(InputInterface::class);
 		$inputInterface->method('getArgument')
 			->with('user_id')

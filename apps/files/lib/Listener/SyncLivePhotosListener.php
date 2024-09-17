@@ -2,24 +2,8 @@
 
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2023 Louis Chemineau <louis@chmn.me>
- *
- * @author Louis Chemineau <louis@chmn.me>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace OCA\Files\Listener;
@@ -116,7 +100,7 @@ class SyncLivePhotosListener implements IEventListener {
 		$peerFileExtension = $peerFile->getExtension();
 		$targetName = $targetFile->getName();
 
-		if (!str_ends_with($targetName, "." . $sourceExtension)) {
+		if (!str_ends_with($targetName, '.' . $sourceExtension)) {
 			throw new AbortedEventException('Cannot change the extension of a Live Photo');
 		}
 
@@ -192,7 +176,7 @@ class SyncLivePhotosListener implements IEventListener {
 				unset($this->pendingDeletion[$peerFile->getId()]);
 				return;
 			} else {
-				throw new AbortedEventException("Cannot delete the video part of a live photo");
+				throw new AbortedEventException('Cannot delete the video part of a live photo');
 			}
 		} else {
 			$this->pendingDeletion[$deletedFile->getId()] = true;

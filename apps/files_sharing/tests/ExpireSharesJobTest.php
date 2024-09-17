@@ -1,27 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Files_Sharing\Tests;
 
@@ -126,7 +107,7 @@ class ExpireSharesJobTest extends \Test\TestCase {
 	 * @param bool $addInterval If true add to the current time if false subtract
 	 * @param bool $shouldExpire Should this share be expired
 	 */
-	public function testExpireLinkShare($addExpiration, $interval, $addInterval, $shouldExpire) {
+	public function testExpireLinkShare($addExpiration, $interval, $addInterval, $shouldExpire): void {
 		$this->loginAsUser($this->user1);
 
 		$user1Folder = \OC::$server->getUserFolder($this->user1);
@@ -183,7 +164,7 @@ class ExpireSharesJobTest extends \Test\TestCase {
 		}
 	}
 
-	public function testDoNotExpireOtherShares() {
+	public function testDoNotExpireOtherShares(): void {
 		$this->loginAsUser($this->user1);
 
 		$user1Folder = \OC::$server->getUserFolder($this->user1);

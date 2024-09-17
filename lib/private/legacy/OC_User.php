@@ -1,47 +1,18 @@
 <?php
-/**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Aldo "xoen" Giambelluca <xoen@xoen.org>
- * @author Andreas Fischer <bantu@owncloud.com>
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Bartek Przybylski <bart.p.pl@gmail.com>
- * @author Björn Schießle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Jakob Sack <mail@jakobsack.de>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author shkdee <louis.traynard@m4x.org>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
- */
 
+/**
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+use OC\Authentication\Token\IProvider;
 use OC\User\LoginException;
+use OCP\Authentication\Token\IToken;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
+use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
-use OCP\IUserSession;
 use OCP\Server;
 use OCP\User\Events\BeforeUserLoggedInEvent;
 use OCP\User\Events\UserLoggedInEvent;
@@ -88,7 +59,7 @@ class OC_User {
 			\OC::$server->getUserManager()->registerBackend($backend);
 		} else {
 			// You'll never know what happens
-			if (null === $backend or !is_string($backend)) {
+			if ($backend === null or !is_string($backend)) {
 				$backend = 'database';
 			}
 
@@ -171,7 +142,7 @@ class OC_User {
 	public static function loginWithApache(\OCP\Authentication\IApacheBackend $backend) {
 		$uid = $backend->getCurrentUserId();
 		$run = true;
-		OC_Hook::emit("OC_User", "pre_login", ["run" => &$run, "uid" => $uid, 'backend' => $backend]);
+		OC_Hook::emit('OC_User', 'pre_login', ['run' => &$run, 'uid' => $uid, 'backend' => $backend]);
 
 		if ($uid) {
 			if (self::getUser() !== $uid) {
@@ -197,6 +168,17 @@ class OC_User {
 
 				$userSession->createSessionToken($request, $uid, $uid, $password);
 				$userSession->createRememberMeToken($userSession->getUser());
+
+				if (empty($password)) {
+					$tokenProvider = \OC::$server->get(IProvider::class);
+					$token = $tokenProvider->getToken($userSession->getSession()->getId());
+					$token->setScope([
+						IToken::SCOPE_SKIP_PASSWORD_VALIDATION => true,
+						IToken::SCOPE_FILESYSTEM => true,
+					]);
+					$tokenProvider->updateToken($token);
+				}
+
 				// setup the filesystem
 				OC_Util::setupFS($uid);
 				// first call the post_login hooks, the login-process needs to be
@@ -231,9 +213,9 @@ class OC_User {
 	 * Verify with Apache whether user is authenticated.
 	 *
 	 * @return boolean|null
-	 *          true: authenticated
-	 *          false: not authenticated
-	 *          null: not handled / no backend available
+	 *                      true: authenticated
+	 *                      false: not authenticated
+	 *                      null: not handled / no backend available
 	 */
 	public static function handleApacheAuth() {
 		$backend = self::findFirstActiveUsedBackend();
@@ -339,7 +321,7 @@ class OC_User {
 	 * @return string|false uid or false
 	 */
 	public static function getUser() {
-		$uid = Server::get(IUserSession::class)->getUser()?->getUID();
+		$uid = Server::get(ISession::class)?->get('user_id');
 		if (!is_null($uid) && self::$incognitoMode === false) {
 			return $uid;
 		} else {

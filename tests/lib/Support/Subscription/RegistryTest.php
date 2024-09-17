@@ -1,23 +1,8 @@
 <?php
 
 /**
- * @author Morris Jobke <hey@morrisjobke.de>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Support\Subscription;
@@ -81,13 +66,13 @@ class RegistryTest extends TestCase {
 	/**
 	 * Doesn't assert anything, just checks whether anything "explodes"
 	 */
-	public function testDelegateToNone() {
+	public function testDelegateToNone(): void {
 		$this->registry->delegateHasValidSubscription();
 		$this->addToAssertionCount(1);
 	}
 
 
-	public function testDoubleRegistration() {
+	public function testDoubleRegistration(): void {
 		$this->expectException(\OCP\Support\Subscription\Exception\AlreadyRegisteredException::class);
 
 		/* @var ISubscription $subscription1 */
@@ -98,12 +83,12 @@ class RegistryTest extends TestCase {
 		$this->registry->register($subscription2);
 	}
 
-	public function testNoSupportApp() {
+	public function testNoSupportApp(): void {
 		$this->assertSame([], $this->registry->delegateGetSupportedApps());
 		$this->assertSame(false, $this->registry->delegateHasValidSubscription());
 	}
 
-	public function testDelegateHasValidSubscription() {
+	public function testDelegateHasValidSubscription(): void {
 		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISubscription::class);
 		$subscription->expects($this->once())
@@ -114,7 +99,7 @@ class RegistryTest extends TestCase {
 		$this->assertSame(true, $this->registry->delegateHasValidSubscription());
 	}
 
-	public function testDelegateHasValidSubscriptionConfig() {
+	public function testDelegateHasValidSubscriptionConfig(): void {
 		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$this->config->expects($this->once())
 			->method('getSystemValueBool')
@@ -124,7 +109,7 @@ class RegistryTest extends TestCase {
 		$this->assertSame(true, $this->registry->delegateHasValidSubscription());
 	}
 
-	public function testDelegateHasExtendedSupport() {
+	public function testDelegateHasExtendedSupport(): void {
 		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISubscription::class);
 		$subscription->expects($this->once())
@@ -136,7 +121,7 @@ class RegistryTest extends TestCase {
 	}
 
 
-	public function testDelegateGetSupportedApps() {
+	public function testDelegateGetSupportedApps(): void {
 		/* @var ISupportedApps|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISupportedApps::class);
 		$subscription->expects($this->once())
@@ -147,7 +132,7 @@ class RegistryTest extends TestCase {
 		$this->assertSame(['abc'], $this->registry->delegateGetSupportedApps());
 	}
 
-	public function testSubscriptionService() {
+	public function testSubscriptionService(): void {
 		$this->serverContainer->method('query')
 			->with(DummySubscription::class)
 			->willReturn(new DummySubscription(true, false, false));
@@ -157,7 +142,7 @@ class RegistryTest extends TestCase {
 		$this->assertFalse($this->registry->delegateHasExtendedSupport());
 	}
 
-	public function testDelegateIsHardUserLimitReached() {
+	public function testDelegateIsHardUserLimitReached(): void {
 		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISubscription::class);
 		$subscription->expects($this->once())
@@ -178,7 +163,7 @@ class RegistryTest extends TestCase {
 		$this->assertSame(true, $this->registry->delegateIsHardUserLimitReached($this->notificationManager));
 	}
 
-	public function testDelegateIsHardUserLimitReachedWithoutSupportApp() {
+	public function testDelegateIsHardUserLimitReachedWithoutSupportApp(): void {
 		$this->config->expects($this->once())
 			->method('getSystemValueBool')
 			->with('one-click-instance')
@@ -200,7 +185,7 @@ class RegistryTest extends TestCase {
 	/**
 	 * @dataProvider dataForUserLimitCheck
 	 */
-	public function testDelegateIsHardUserLimitReachedWithoutSupportAppAndUserCount($userLimit, $userCount, $disabledUsers, $expectedResult) {
+	public function testDelegateIsHardUserLimitReachedWithoutSupportAppAndUserCount($userLimit, $userCount, $disabledUsers, $expectedResult): void {
 		$this->config->expects($this->once())
 			->method('getSystemValueBool')
 			->with('one-click-instance')

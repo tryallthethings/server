@@ -1,35 +1,10 @@
 <?php
-/**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Bernhard Posselt <dev@bernhard-posselt.com>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Jörn Friedrich Dreyer <jfd@butonic.de>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Stefan Weil <sw@weilnetz.de>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
- */
 
+/**
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
 namespace OC\Files\Node;
 
 use OC\Files\FileInfo;
@@ -53,6 +28,7 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -137,7 +113,7 @@ class Root extends Folder implements IRootFolder {
 	 * @param string $method optional
 	 * @param callable $callback optional
 	 */
-	public function removeListener($scope = null, $method = null, callable $callback = null) {
+	public function removeListener($scope = null, $method = null, ?callable $callback = null) {
 		$this->emitter->removeListener($scope, $method, $callback);
 	}
 
@@ -484,7 +460,7 @@ class Root extends Folder implements IRootFolder {
 				if ($folder instanceof Folder) {
 					return $folder->getByIdInRootMount($id);
 				} else {
-					throw new \Exception("getByIdInPath with non folder");
+					throw new \Exception('getByIdInPath with non folder');
 				}
 			}
 			return [];
@@ -502,9 +478,23 @@ class Root extends Folder implements IRootFolder {
 			$pathRelativeToMount = substr($internalPath, strlen($rootInternalPath));
 			$pathRelativeToMount = ltrim($pathRelativeToMount, '/');
 			$absolutePath = rtrim($mount->getMountPoint() . $pathRelativeToMount, '/');
+			$storage = $mount->getStorage();
+			if ($storage === null) {
+				return null;
+			}
+			$ownerId = $storage->getOwner($pathRelativeToMount);
+			if ($ownerId !== false) {
+				$owner = Server::get(IUserManager::class)->get($ownerId);
+			} else {
+				$owner = null;
+			}
 			return $this->createNode($absolutePath, new FileInfo(
-				$absolutePath, $mount->getStorage(), $cacheEntry->getPath(), $cacheEntry, $mount,
-				\OC::$server->getUserManager()->get($mount->getStorage()->getOwner($pathRelativeToMount))
+				$absolutePath,
+				$storage,
+				$cacheEntry->getPath(),
+				$cacheEntry,
+				$mount,
+				$owner,
 			));
 		}, $mountsContainingFile);
 

@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright (c) 2015 Vincent Petry <pvince81@owncloud.com>
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Repair;
@@ -61,7 +60,7 @@ class RepairInvalidSharesTest extends TestCase {
 	/**
 	 * Test remove shares where the parent share does not exist anymore
 	 */
-	public function testSharesNonExistingParent() {
+	public function testSharesNonExistingParent(): void {
 		$qb = $this->connection->getQueryBuilder();
 		$shareValues = [
 			'share_type' => $qb->expr()->literal(IShare::TYPE_USER),
@@ -154,7 +153,7 @@ class RepairInvalidSharesTest extends TestCase {
 	 *
 	 * @dataProvider fileSharePermissionsProvider
 	 */
-	public function testFileSharePermissions($itemType, $testPerms, $expectedPerms) {
+	public function testFileSharePermissions($itemType, $testPerms, $expectedPerms): void {
 		$qb = $this->connection->getQueryBuilder();
 		$qb->insert('share')
 			->values([

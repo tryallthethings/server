@@ -1,30 +1,14 @@
 /**
- * @copyright Copyright (c) 2022 John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-/* eslint-disable n/no-unpublished-import */
-import axios from '@nextcloud/axios'
+// eslint-disable-next-line n/no-extraneous-import
+import axios, { type AxiosResponse } from 'axios'
 import { addCommands, User } from '@nextcloud/cypress'
 import { basename } from 'path'
 
 // Add custom commands
+import '@testing-library/cypress/add-commands'
 import 'cypress-if'
 import 'cypress-wait-until'
 addCommands()
@@ -33,10 +17,12 @@ addCommands()
 declare global {
 	// eslint-disable-next-line @typescript-eslint/no-namespace
 	namespace Cypress {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 		interface Chainable<Subject = any> {
 			/**
 			 * Enable or disable a given user
 			 */
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			enableUser(user: User, enable?: boolean): Cypress.Chainable<Cypress.Response<any>>,
 
 			/**
@@ -79,6 +65,23 @@ declare global {
 			 * Run an occ command in the docker container.
 			 */
 			runOccCommand(command: string, options?: Partial<Cypress.ExecOptions>): Cypress.Chainable<Cypress.Exec>,
+
+			userFileExists(user: string, path: string): Cypress.Chainable<number>
+
+			/**
+			 * Create a snapshot of the current database
+			 */
+			backupDB(): Cypress.Chainable<string>,
+
+			/**
+			 * Restore a snapshot of the database
+			 * Default is the post-setup state
+			 */
+			restoreDB(snapshot?: string): Cypress.Chainable
+
+			backupData(users?: string[]): Cypress.Chainable<string>
+
+			restoreData(snapshot?: string): Cypress.Chainable
 		}
 	}
 }
@@ -88,7 +91,7 @@ Cypress.env('baseUrl', url)
 
 /**
  * Enable or disable a user
- * TODO: standardise in @nextcloud/cypress
+ * TODO: standardize in @nextcloud/cypress
  *
  * @param {User} user the user to dis- / enable
  * @param {boolean} enable True if the user should be enable, false to disable
@@ -115,7 +118,7 @@ Cypress.Commands.add('enableUser', (user: User, enable = true) => {
 
 /**
  * cy.uploadedFile - uploads a file from the fixtures folder
- * TODO: standardise in @nextcloud/cypress
+ * TODO: standardize in @nextcloud/cypress
  *
  * @param {User} user the owner of the file, e.g. admin
  * @param {string} fixture the fixture file name, e.g. image1.jpg
@@ -184,14 +187,14 @@ Cypress.Commands.add('mkdir', (user: User, target: string) => {
 				cy.log(`Created directory ${target}`, response)
 			} catch (error) {
 				cy.log('error', error)
-				throw new Error('Unable to process fixture')
+				throw new Error('Unable to create directory')
 			}
 		})
 })
 
 /**
  * cy.uploadedContent - uploads a raw content
- * TODO: standardise in @nextcloud/cypress
+ * TODO: standardize in @nextcloud/cypress
  *
  * @param {User} user the owner of the file, e.g. admin
  * @param {Blob} blob the content to upload
@@ -289,4 +292,38 @@ Cypress.Commands.add('resetUserTheming', (user?: User) => {
 Cypress.Commands.add('runOccCommand', (command: string, options?: Partial<Cypress.ExecOptions>) => {
 	const env = Object.entries(options?.env ?? {}).map(([name, value]) => `-e '${name}=${value}'`).join(' ')
 	return cy.exec(`docker exec --user www-data ${env} nextcloud-cypress-tests-server php ./occ ${command}`, options)
+})
+
+Cypress.Commands.add('userFileExists', (user: string, path: string) => {
+	user.replaceAll('"', '\\"')
+	path.replaceAll('"', '\\"').replaceAll(/^\/+/gm, '')
+	return cy.exec(`docker exec --user www-data nextcloud-cypress-tests-server stat --printf="%s" "data/${user}/files/${path}"`, { failOnNonZeroExit: true })
+		.then((exec) => Number.parseInt(exec.stdout || '0'))
+})
+
+Cypress.Commands.add('backupDB', (): Cypress.Chainable<string> => {
+	const randomString = Math.random().toString(36).substring(7)
+	cy.exec(`docker exec --user www-data nextcloud-cypress-tests-server cp /var/www/html/data/owncloud.db /var/www/html/data/owncloud.db-${randomString}`)
+	cy.log(`Created snapshot ${randomString}`)
+	return cy.wrap(randomString)
+})
+
+Cypress.Commands.add('restoreDB', (snapshot: string = 'init') => {
+	cy.exec(`docker exec --user www-data nextcloud-cypress-tests-server cp /var/www/html/data/owncloud.db-${snapshot} /var/www/html/data/owncloud.db`)
+	cy.log(`Restored snapshot ${snapshot}`)
+})
+
+Cypress.Commands.add('backupData', (users: string[] = ['admin']) => {
+	const snapshot = Math.random().toString(36).substring(7)
+	const toBackup = users.map((user) => `'${user.replaceAll('\\', '').replaceAll('\'', '\\\'')}'`).join(' ')
+	cy.exec(`docker exec --user www-data rm /var/www/html/data/data-${snapshot}.tar`, { failOnNonZeroExit: false })
+	cy.exec(`docker exec --user www-data --workdir /var/www/html/data nextcloud-cypress-tests-server tar cf /var/www/html/data/data-${snapshot}.tar ${toBackup}`)
+	return cy.wrap(snapshot as string)
+})
+
+Cypress.Commands.add('restoreData', (snapshot?: string) => {
+	snapshot = snapshot ?? 'init'
+	snapshot.replaceAll('\\', '').replaceAll('"', '\\"')
+	cy.exec(`docker exec --user www-data --workdir /var/www/html/data nextcloud-cypress-tests-server rm -vfr $(tar --exclude='*/*' -tf '/var/www/html/data/data-${snapshot}.tar')`)
+	cy.exec(`docker exec --user www-data --workdir /var/www/html/data nextcloud-cypress-tests-server tar -xf '/var/www/html/data/data-${snapshot}.tar'`)
 })

@@ -1,24 +1,9 @@
 <?php
 
 /**
- * ownCloud - App Framework
- *
- * @author Bernhard Posselt
- * @copyright 2012 Bernhard Posselt dev@bernhard-posselt.com
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU AFFERO GENERAL PUBLIC LICENSE for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\AppFramework\Db;
@@ -42,7 +27,6 @@ use PHPUnit\Framework\Constraint\IsType;
  * @method void setTrueOrFalse(bool $trueOrFalse)
  * @method bool getAnotherBool()
  * @method bool isAnotherBool()
- * @method void setAnotherBool(bool $anotherBool)
  * @method string getLongText()
  * @method void setLongText(string $longText)
  */
@@ -62,6 +46,10 @@ class TestEntity extends Entity {
 		$this->addType('longText', 'blob');
 		$this->name = $name;
 	}
+
+	public function setAnotherBool(bool $anotherBool): void {
+		parent::setAnotherBool($anotherBool);
+	}
 }
 
 
@@ -74,7 +62,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testResetUpdatedFields() {
+	public function testResetUpdatedFields(): void {
 		$entity = new TestEntity();
 		$entity->setId(3);
 		$entity->resetUpdatedFields();
@@ -83,19 +71,21 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testFromRow() {
+	public function testFromRow(): void {
 		$row = [
 			'pre_name' => 'john',
-			'email' => 'john@something.com'
+			'email' => 'john@something.com',
+			'another_bool' => 1,
 		];
 		$this->entity = TestEntity::fromRow($row);
 
 		$this->assertEquals($row['pre_name'], $this->entity->getPreName());
 		$this->assertEquals($row['email'], $this->entity->getEmail());
+		$this->assertEquals($row['another_bool'], $this->entity->getAnotherBool());
 	}
 
 
-	public function testGetSetId() {
+	public function testGetSetId(): void {
 		$id = 3;
 		$this->entity->setId(3);
 
@@ -103,28 +93,28 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testColumnToPropertyNoReplacement() {
+	public function testColumnToPropertyNoReplacement(): void {
 		$column = 'my';
 		$this->assertEquals('my',
 			$this->entity->columnToProperty($column));
 	}
 
 
-	public function testColumnToProperty() {
+	public function testColumnToProperty(): void {
 		$column = 'my_attribute';
 		$this->assertEquals('myAttribute',
 			$this->entity->columnToProperty($column));
 	}
 
 
-	public function testPropertyToColumnNoReplacement() {
+	public function testPropertyToColumnNoReplacement(): void {
 		$property = 'my';
 		$this->assertEquals('my',
 			$this->entity->propertyToColumn($property));
 	}
 
 
-	public function testSetterMarksFieldUpdated() {
+	public function testSetterMarksFieldUpdated(): void {
 		$this->entity->setId(3);
 
 		$this->assertContains('id', array_keys($this->entity->getUpdatedFields()));
@@ -132,7 +122,7 @@ class EntityTest extends \Test\TestCase {
 
 
 
-	public function testCallShouldOnlyWorkForGetterSetter() {
+	public function testCallShouldOnlyWorkForGetterSetter(): void {
 		$this->expectException(\BadFunctionCallException::class);
 
 		$this->entity->something();
@@ -140,21 +130,21 @@ class EntityTest extends \Test\TestCase {
 
 
 
-	public function testGetterShouldFailIfAttributeNotDefined() {
+	public function testGetterShouldFailIfAttributeNotDefined(): void {
 		$this->expectException(\BadFunctionCallException::class);
 
 		$this->entity->getTest();
 	}
 
 
-	public function testSetterShouldFailIfAttributeNotDefined() {
+	public function testSetterShouldFailIfAttributeNotDefined(): void {
 		$this->expectException(\BadFunctionCallException::class);
 
 		$this->entity->setTest();
 	}
 
 
-	public function testFromRowShouldNotAssignEmptyArray() {
+	public function testFromRowShouldNotAssignEmptyArray(): void {
 		$row = [];
 		$entity2 = new TestEntity();
 
@@ -163,7 +153,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testIdGetsConvertedToInt() {
+	public function testIdGetsConvertedToInt(): void {
 		$row = ['id' => '4'];
 
 		$this->entity = TestEntity::fromRow($row);
@@ -171,7 +161,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testSetType() {
+	public function testSetType(): void {
 		$row = ['testId' => '4'];
 
 		$this->entity = TestEntity::fromRow($row);
@@ -179,7 +169,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testFromParams() {
+	public function testFromParams(): void {
 		$params = [
 			'testId' => 4,
 			'email' => 'john@doe'
@@ -192,7 +182,7 @@ class EntityTest extends \Test\TestCase {
 		$this->assertTrue($entity instanceof TestEntity);
 	}
 
-	public function testSlugify() {
+	public function testSlugify(): void {
 		$entity = new TestEntity();
 		$entity->setName('Slugify this!');
 		$this->assertEquals('slugify-this', $entity->slugify('name'));
@@ -201,20 +191,20 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testSetterCasts() {
+	public function testSetterCasts(): void {
 		$entity = new TestEntity();
 		$entity->setId('3');
 		$this->assertSame(3, $entity->getId());
 	}
 
 
-	public function testSetterDoesNotCastOnNull() {
+	public function testSetterDoesNotCastOnNull(): void {
 		$entity = new TestEntity();
 		$entity->setId(null);
 		$this->assertSame(null, $entity->getId());
 	}
 
-	public function testSetterConvertsResourcesToStringProperly() {
+	public function testSetterConvertsResourcesToStringProperly(): void {
 		$string = 'Definitely a string';
 		$stream = fopen('php://memory', 'r+');
 		fwrite($stream, $string);
@@ -227,7 +217,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testGetFieldTypes() {
+	public function testGetFieldTypes(): void {
 		$entity = new TestEntity();
 		$this->assertEquals([
 			'id' => 'integer',
@@ -239,20 +229,20 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testGetItInt() {
+	public function testGetItInt(): void {
 		$entity = new TestEntity();
 		$entity->setId(3);
 		$this->assertEquals('integer', gettype($entity->getId()));
 	}
 
 
-	public function testFieldsNotMarkedUpdatedIfNothingChanges() {
+	public function testFieldsNotMarkedUpdatedIfNothingChanges(): void {
 		$entity = new TestEntity('hey');
 		$entity->setName('hey');
 		$this->assertEquals(0, count($entity->getUpdatedFields()));
 	}
 
-	public function testIsGetter() {
+	public function testIsGetter(): void {
 		$entity = new TestEntity();
 		$entity->setTrueOrFalse(false);
 		$entity->setAnotherBool(false);
@@ -261,7 +251,7 @@ class EntityTest extends \Test\TestCase {
 	}
 
 
-	public function testIsGetterShoudFailForOtherType() {
+	public function testIsGetterShoudFailForOtherType(): void {
 		$this->expectException(\BadFunctionCallException::class);
 
 		$entity = new TestEntity();

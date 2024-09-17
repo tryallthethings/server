@@ -1,24 +1,7 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Arthur Schiwon <blizzz@arthur-schiwon.de>
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Collaboration\Collaborators;
@@ -41,15 +24,15 @@ use Psr\Log\LoggerInterface;
 use Test\TestCase;
 
 class LookupPluginTest extends TestCase {
-	/** @var  IConfig|MockObject */
+	/** @var IConfig|MockObject */
 	protected $config;
-	/** @var  IClientService|MockObject */
+	/** @var IClientService|MockObject */
 	protected $clientService;
 	/** @var IUserSession|MockObject */
 	protected $userSession;
 	/** @var ICloudIdManager|MockObject */
 	protected $cloudIdManager;
-	/** @var  LookupPlugin */
+	/** @var LookupPlugin */
 	protected $plugin;
 	/** @var LoggerInterface|MockObject */
 	protected $logger;
@@ -86,7 +69,7 @@ class LookupPluginTest extends TestCase {
 		);
 	}
 
-	public function testSearchNoLookupServerURI() {
+	public function testSearchNoLookupServerURI(): void {
 		$this->config->expects($this->once())
 			->method('getAppValue')
 			->with('files_sharing', 'lookupServerEnabled', 'yes')
@@ -115,7 +98,7 @@ class LookupPluginTest extends TestCase {
 		$this->plugin->search('foobar', 10, 0, $searchResult);
 	}
 
-	public function testSearchNoInternet() {
+	public function testSearchNoInternet(): void {
 		$this->config->expects($this->once())
 			->method('getAppValue')
 			->with('files_sharing', 'lookupServerEnabled', 'yes')
@@ -143,7 +126,7 @@ class LookupPluginTest extends TestCase {
 	 * @dataProvider searchDataProvider
 	 * @param array $searchParams
 	 */
-	public function testSearch(array $searchParams) {
+	public function testSearch(array $searchParams): void {
 		$type = new SearchResultType('lookup');
 
 		/** @var ISearchResult|MockObject $searchResult */
@@ -206,7 +189,7 @@ class LookupPluginTest extends TestCase {
 	 * @param bool $GSEnabled
 	 * @param bool $LookupEnabled
 	 */
-	public function testSearchEnableDisableLookupServer(array $searchParams, $GSEnabled, $LookupEnabled) {
+	public function testSearchEnableDisableLookupServer(array $searchParams, $GSEnabled, $LookupEnabled): void {
 		$type = new SearchResultType('lookup');
 
 		/** @var ISearchResult|MockObject $searchResult */
@@ -275,7 +258,7 @@ class LookupPluginTest extends TestCase {
 	}
 
 
-	public function testSearchLookupServerDisabled() {
+	public function testSearchLookupServerDisabled(): void {
 		$this->config->expects($this->once())
 			->method('getAppValue')
 			->with('files_sharing', 'lookupServerEnabled', 'yes')

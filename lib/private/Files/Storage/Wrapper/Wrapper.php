@@ -1,41 +1,20 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author J0WI <J0WI@users.noreply.github.com>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Robin McCorkell <robin@mccorkell.me.uk>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Tigran Mkrtchyan <tigran.mkrtchyan@desy.de>
- * @author Vincent Petry <vincent@nextcloud.com>
- * @author Vinicius Cubas Brand <vinicius@eita.org.br>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Files\Storage\Wrapper;
 
+use OC\Files\Storage\FailedStorage;
 use OCP\Files\InvalidPathException;
 use OCP\Files\Storage\ILockingStorage;
 use OCP\Files\Storage\IStorage;
 use OCP\Files\Storage\IWriteStreamStorage;
 use OCP\Lock\ILockingProvider;
+use OCP\Server;
+use Psr\Log\LoggerInterface;
 
 class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStreamStorage {
 	/**
@@ -60,6 +39,12 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 	 * @return \OC\Files\Storage\Storage
 	 */
 	public function getWrapperStorage() {
+		if (!$this->storage) {
+			$message = 'storage wrapper ' . get_class($this) . " doesn't have a wrapped storage set";
+			$logger = Server::get(LoggerInterface::class);
+			$logger->error($message);
+			$this->storage = new FailedStorage(['exception' => new \Exception($message)]);
+		}
 		return $this->storage;
 	}
 
@@ -332,16 +317,6 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 	}
 
 	/**
-	 * search for occurrences of $query in file names
-	 *
-	 * @param string $query
-	 * @return array|bool
-	 */
-	public function search($query) {
-		return $this->getWrapperStorage()->search($query);
-	}
-
-	/**
 	 * see https://www.php.net/manual/en/function.touch.php
 	 * If the backend does not support the operation, false should be returned
 	 *
@@ -378,13 +353,6 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->hasUpdated($path, $time);
 	}
 
-	/**
-	 * get a cache instance for the storage
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage|null (optional) the storage to pass to the cache
-	 * @return \OC\Files\Cache\Cache
-	 */
 	public function getCache($path = '', $storage = null) {
 		if (!$storage) {
 			$storage = $this;
@@ -392,13 +360,6 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->getCache($path, $storage);
 	}
 
-	/**
-	 * get a scanner instance for the storage
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the scanner
-	 * @return \OC\Files\Cache\Scanner
-	 */
 	public function getScanner($path = '', $storage = null) {
 		if (!$storage) {
 			$storage = $this;
@@ -406,24 +367,10 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->getScanner($path, $storage);
 	}
 
-
-	/**
-	 * get the user id of the owner of a file or folder
-	 *
-	 * @param string $path
-	 * @return string
-	 */
-	public function getOwner($path) {
+	public function getOwner($path): string|false {
 		return $this->getWrapperStorage()->getOwner($path);
 	}
 
-	/**
-	 * get a watcher instance for the cache
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the watcher
-	 * @return \OC\Files\Cache\Watcher
-	 */
 	public function getWatcher($path = '', $storage = null) {
 		if (!$storage) {
 			$storage = $this;
@@ -445,9 +392,6 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->getUpdater($storage);
 	}
 
-	/**
-	 * @return \OC\Files\Cache\Storage
-	 */
 	public function getStorageCache() {
 		return $this->getWrapperStorage()->getStorageCache();
 	}
@@ -596,34 +540,18 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->getMetaData($path);
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 * @throws \OCP\Lock\LockedException
-	 */
 	public function acquireLock($path, $type, ILockingProvider $provider) {
 		if ($this->getWrapperStorage()->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
 			$this->getWrapperStorage()->acquireLock($path, $type, $provider);
 		}
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function releaseLock($path, $type, ILockingProvider $provider) {
 		if ($this->getWrapperStorage()->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
 			$this->getWrapperStorage()->releaseLock($path, $type, $provider);
 		}
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function changeLock($path, $type, ILockingProvider $provider) {
 		if ($this->getWrapperStorage()->instanceOfStorage('\OCP\Files\Storage\ILockingStorage')) {
 			$this->getWrapperStorage()->changeLock($path, $type, $provider);
@@ -637,7 +565,7 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 		return $this->getWrapperStorage()->needsPartFile();
 	}
 
-	public function writeStream(string $path, $stream, int $size = null): int {
+	public function writeStream(string $path, $stream, ?int $size = null): int {
 		$storage = $this->getWrapperStorage();
 		if ($storage->instanceOfStorage(IWriteStreamStorage::class)) {
 			/** @var IWriteStreamStorage $storage */
@@ -664,5 +592,9 @@ class Wrapper implements \OC\Files\Storage\Storage, ILockingStorage, IWriteStrea
 			return $wrapped->isWrapperOf($storage);
 		}
 		return false;
+	}
+
+	public function setOwner(?string $user): void {
+		$this->getWrapperStorage()->setOwner($user);
 	}
 }

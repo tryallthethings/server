@@ -3,33 +3,9 @@
 declare(strict_types=1);
 
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- * @copyright Copyright (c) 2019, Georg Ehrke
- *
- * @author Achim Königs <garfonso@tratschtante.de>
- * @author Christian Weiske <cweiske@cweiske.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Georg Ehrke <oc.list@georgehrke.com>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Sven Strickroth <email@cs-ware.de>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Valdnet <47037905+Valdnet@users.noreply.github.com>
- * @author Cédric Neukom <github@webguy.ch>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\DAV\CalDAV;
 
@@ -111,7 +87,7 @@ class BirthdayService {
 				return;
 			}
 			foreach ($datesToSync as $type) {
-				$this->updateCalendar($cardUri, $cardData, $book, (int) $calendar['id'], $type, $reminderOffset);
+				$this->updateCalendar($cardUri, $cardData, $book, (int)$calendar['id'], $type, $reminderOffset);
 			}
 		}
 	}
@@ -271,7 +247,7 @@ class BirthdayService {
 		$vEvent->{'X-NEXTCLOUD-BC-FIELD-TYPE'} = $dateField;
 		$vEvent->{'X-NEXTCLOUD-BC-UNKNOWN-YEAR'} = $dateParts['year'] === null ? '1' : '0';
 		if ($originalYear !== null) {
-			$vEvent->{'X-NEXTCLOUD-BC-YEAR'} = (string) $originalYear;
+			$vEvent->{'X-NEXTCLOUD-BC-YEAR'} = (string)$originalYear;
 		}
 		if ($reminderOffset) {
 			$alarm = $vCal->createComponent('VALARM');
@@ -311,7 +287,7 @@ class BirthdayService {
 		foreach ($books as $book) {
 			$cards = $this->cardDavBackEnd->getCards($book['id']);
 			foreach ($cards as $card) {
-				$this->onCardChanged((int) $book['id'], $card['uri'], $card['carddata']);
+				$this->onCardChanged((int)$book['id'], $card['uri'], $card['carddata']);
 			}
 		}
 	}
@@ -470,7 +446,7 @@ class BirthdayService {
 	 */
 	private function formatTitle(string $field,
 		string $name,
-		int $year = null,
+		?int $year = null,
 		bool $supports4Byte = true):string {
 		if ($supports4Byte) {
 			switch ($field) {

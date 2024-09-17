@@ -3,29 +3,8 @@
 declare(strict_types=1);
 
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\UpdateNotification\Tests\Settings;
 
@@ -101,7 +80,7 @@ class AdminTest extends TestCase {
 		);
 	}
 
-	public function testGetFormWithUpdate() {
+	public function testGetFormWithUpdate(): void {
 		$backend1 = $this->createMock(CountUsersBackend::class);
 		$backend2 = $this->createMock(CountUsersBackend::class);
 		$backend3 = $this->createMock(CountUsersBackend::class);
@@ -227,7 +206,7 @@ class AdminTest extends TestCase {
 		$this->assertEquals($expected, $this->admin->getForm());
 	}
 
-	public function testGetFormWithUpdateAndChangedUpdateServer() {
+	public function testGetFormWithUpdateAndChangedUpdateServer(): void {
 		$backend1 = $this->createMock(CountUsersBackend::class);
 		$backend2 = $this->createMock(CountUsersBackend::class);
 		$backend3 = $this->createMock(CountUsersBackend::class);
@@ -354,7 +333,7 @@ class AdminTest extends TestCase {
 		$this->assertEquals($expected, $this->admin->getForm());
 	}
 
-	public function testGetFormWithUpdateAndCustomersUpdateServer() {
+	public function testGetFormWithUpdateAndCustomersUpdateServer(): void {
 		$backend1 = $this->createMock(CountUsersBackend::class);
 		$backend2 = $this->createMock(CountUsersBackend::class);
 		$backend3 = $this->createMock(CountUsersBackend::class);
@@ -482,11 +461,11 @@ class AdminTest extends TestCase {
 	}
 
 
-	public function testGetSection() {
+	public function testGetSection(): void {
 		$this->assertSame('overview', $this->admin->getSection());
 	}
 
-	public function testGetPriority() {
+	public function testGetPriority(): void {
 		$this->assertSame(11, $this->admin->getPriority());
 	}
 
@@ -548,7 +527,7 @@ class AdminTest extends TestCase {
 	/**
 	 * @dataProvider changesProvider
 	 */
-	public function testFilterChanges($changes, $userLang, $expectation) {
+	public function testFilterChanges($changes, $userLang, $expectation): void {
 		$iterator = $this->createMock(ILanguageIterator::class);
 		$iterator->expects($this->any())
 			->method('current')

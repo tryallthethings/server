@@ -1,23 +1,7 @@
 <!--
-  - @copyright 2023 Christoph Wurst <christoph@winzerhof-wurst.at>
-  -
-  - @author 2023 Christoph Wurst <christoph@winzerhof-wurst.at>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  -->
+  - SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 
 <template>
 	<li class="contact">
@@ -94,7 +78,7 @@ export default {
 				}
 			}
 			return undefined
-		}
+		},
 	},
 }
 </script>
@@ -104,7 +88,8 @@ export default {
 	display: flex;
 	position: relative;
 	align-items: center;
-	padding: 3px 3px 3px 10px;
+	padding: 3px;
+	padding-inline-start: 10px;
 
 	&__action {
 		&__icon {
@@ -115,17 +100,14 @@ export default {
 		}
 	}
 
-	&__avatar-wrapper {
-	}
-
 	&__avatar {
 		display: inherit;
 	}
 
 	&__body {
 		flex-grow: 1;
-		padding-left: 10px;
-		margin-left: 10px;
+		padding-inline-start: 10px;
+		margin-inline-start: 10px;
 		min-width: 0;
 
 		div {
@@ -178,11 +160,11 @@ export default {
 	/* actions menu */
 	.menu {
 		top: 47px;
-		margin-right: 13px;
+		margin-inline-end: 13px;
 	}
 
 	.popovermenu::after {
-		right: 2px;
+		inset-inline-end: 2px;
 	}
 }
 </style>

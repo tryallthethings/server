@@ -1,25 +1,7 @@
 <!--
-  - @copyright Copyright (c) 2018 Julius Härtl <jus@bitgrid.net>
-  -
-  - @author Julius Härtl <jus@bitgrid.net>
-  -
-  - @license GNU AGPL version 3 or any later version
-  -
-  - This program is free software: you can redistribute it and/or modify
-  - it under the terms of the GNU Affero General Public License as
-  - published by the Free Software Foundation, either version 3 of the
-  - License, or (at your option) any later version.
-  -
-  - This program is distributed in the hope that it will be useful,
-  - but WITHOUT ANY WARRANTY; without even the implied warranty of
-  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  - GNU Affero General Public License for more details.
-  -
-  - You should have received a copy of the GNU Affero General Public License
-  - along with this program. If not, see <http://www.gnu.org/licenses/>.
-  -
-  -->
-
+  - SPDX-FileCopyrightText: 2018 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
 	<component :is="listView ? 'tr' : (inline ? 'article' : 'li')"
 		class="app-item"
@@ -246,7 +228,7 @@ export default {
 		.app-image {
 			width: var(--default-clickable-area);
 			height: auto;
-			text-align: right;
+			text-align: end;
 		}
 
 		.app-image-icon svg,
@@ -275,8 +257,7 @@ export default {
 		.app-name--link::after {
 			content: '';
 			position: absolute;
-			left: 0;
-			right: 0;
+			inset-inline: 0;
 			height: var(--app-item-height);
 		}
 
@@ -289,7 +270,7 @@ export default {
 			.icon-loading-small {
 				display: inline-block;
 				top: 4px;
-				margin-right: 10px;
+				margin-inline-end: 10px;
 			}
 		}
 
@@ -335,10 +316,8 @@ export default {
 		.app-name--link::after {
 			content: '';
 			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
+			inset-block: 0;
+			inset-inline: 0;
 		}
 
 		.app-actions {

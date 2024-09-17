@@ -1,24 +1,9 @@
 <?php
 
 /**
- * ownCloud - App Framework
- *
- * @author Bernhard Posselt
- * @copyright 2012 Bernhard Posselt <dev@bernhard-posselt.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU AFFERO GENERAL PUBLIC LICENSE for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\AppFramework\Http;
@@ -92,19 +77,19 @@ class DispatcherTest extends \Test\TestCase {
 	/** @var Dispatcher */
 	private $dispatcher;
 	private $controllerMethod;
-	/** @var Controller|MockObject  */
+	/** @var Controller|MockObject */
 	private $controller;
 	private $response;
-	/** @var IRequest|MockObject  */
+	/** @var IRequest|MockObject */
 	private $request;
 	private $lastModified;
 	private $etag;
-	/** @var Http|MockObject  */
+	/** @var Http|MockObject */
 	private $http;
 	private $reflector;
-	/** @var IConfig|MockObject  */
+	/** @var IConfig|MockObject */
 	private $config;
-	/** @var LoggerInterface|MockObject  */
+	/** @var LoggerInterface|MockObject */
 	private $logger;
 	/** @var IEventLogger|MockObject */
 	private $eventLogger;
@@ -245,7 +230,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testDispatcherReturnsArrayWith2Entries() {
+	public function testDispatcherReturnsArrayWith2Entries(): void {
 		$this->setMiddlewareExpectations('');
 
 		$response = $this->dispatcher->dispatch($this->controller, $this->controllerMethod);
@@ -255,7 +240,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testHeadersAndOutputAreReturned() {
+	public function testHeadersAndOutputAreReturned(): void {
 		$out = 'yo';
 		$httpHeaders = 'Http';
 		$responseHeaders = ['hell' => 'yeah'];
@@ -270,7 +255,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testExceptionCallsAfterException() {
+	public function testExceptionCallsAfterException(): void {
 		$out = 'yo';
 		$httpHeaders = 'Http';
 		$responseHeaders = ['hell' => 'yeah'];
@@ -285,7 +270,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testExceptionThrowsIfCanNotBeHandledByAfterException() {
+	public function testExceptionThrowsIfCanNotBeHandledByAfterException(): void {
 		$out = 'yo';
 		$httpHeaders = 'Http';
 		$responseHeaders = ['hell' => 'yeah'];
@@ -301,7 +286,7 @@ class DispatcherTest extends \Test\TestCase {
 
 	private function dispatcherPassthrough() {
 		$this->middlewareDispatcher->expects($this->once())
-				->method('beforeController');
+			->method('beforeController');
 		$this->middlewareDispatcher->expects($this->once())
 			->method('afterController')
 			->willReturnCallback(function ($a, $b, $in) {
@@ -315,7 +300,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testControllerParametersInjected() {
+	public function testControllerParametersInjected(): void {
 		$this->request = new Request(
 			[
 				'post' => [
@@ -347,7 +332,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testControllerParametersInjectedDefaultOverwritten() {
+	public function testControllerParametersInjectedDefaultOverwritten(): void {
 		$this->request = new Request(
 			[
 				'post' => [
@@ -381,7 +366,7 @@ class DispatcherTest extends \Test\TestCase {
 
 
 
-	public function testResponseTransformedByUrlFormat() {
+	public function testResponseTransformedByUrlFormat(): void {
 		$this->request = new Request(
 			[
 				'post' => [
@@ -416,7 +401,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testResponseTransformsDataResponse() {
+	public function testResponseTransformsDataResponse(): void {
 		$this->request = new Request(
 			[
 				'post' => [
@@ -451,7 +436,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testResponseTransformedByAcceptHeader() {
+	public function testResponseTransformedByAcceptHeader(): void {
 		$this->request = new Request(
 			[
 				'post' => [
@@ -487,7 +472,7 @@ class DispatcherTest extends \Test\TestCase {
 	}
 
 
-	public function testResponsePrimarilyTransformedByParameterFormat() {
+	public function testResponsePrimarilyTransformedByParameterFormat(): void {
 		$this->request = new Request(
 			[
 				'post' => [

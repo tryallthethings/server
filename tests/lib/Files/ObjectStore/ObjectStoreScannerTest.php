@@ -1,13 +1,7 @@
 <?php
 /**
- * ownCloud
- *
- * @author Joas Schilling
- * @copyright 2015 Joas Schilling nickvergessen@owncloud.com
- *
- * This file is licensed under the Affero General Public License version 3 or
- * later.
- * See the COPYING-README file.
+ * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace Test\Files\ObjectStore;
@@ -37,7 +31,7 @@ class ObjectStoreScannerTest extends TestCase {
 		$this->realScanner = new Scanner($this->storage);
 	}
 
-	public function testFile() {
+	public function testFile(): void {
 		$data = "dummy file data\n";
 		$this->storage->file_put_contents('foo.txt', $data);
 
@@ -57,7 +51,7 @@ class ObjectStoreScannerTest extends TestCase {
 		$this->storage->file_put_contents('folder/bar.txt', $textData);
 	}
 
-	public function testFolder() {
+	public function testFolder(): void {
 		$this->fillTestFolders();
 
 		$this->assertEquals(
@@ -67,7 +61,7 @@ class ObjectStoreScannerTest extends TestCase {
 		);
 	}
 
-	public function testBackgroundScan() {
+	public function testBackgroundScan(): void {
 		$this->fillTestFolders();
 		$this->storage->mkdir('folder2');
 		$this->storage->file_put_contents('folder2/bar.txt', 'foobar');

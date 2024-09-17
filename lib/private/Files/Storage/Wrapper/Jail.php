@@ -1,35 +1,15 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author J0WI <J0WI@users.noreply.github.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Tigran Mkrtchyan <tigran.mkrtchyan@desy.de>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Files\Storage\Wrapper;
 
 use OC\Files\Cache\Wrapper\CacheJail;
 use OC\Files\Cache\Wrapper\JailPropagator;
+use OC\Files\Cache\Wrapper\JailWatcher;
 use OC\Files\Filesystem;
 use OCP\Files\Storage\IStorage;
 use OCP\Files\Storage\IWriteStreamStorage;
@@ -342,16 +322,6 @@ class Jail extends Wrapper {
 	}
 
 	/**
-	 * search for occurrences of $query in file names
-	 *
-	 * @param string $query
-	 * @return array|bool
-	 */
-	public function search($query) {
-		return $this->getWrapperStorage()->search($query);
-	}
-
-	/**
 	 * see https://www.php.net/manual/en/function.touch.php
 	 * If the backend does not support the operation, false should be returned
 	 *
@@ -388,40 +358,18 @@ class Jail extends Wrapper {
 		return $this->getWrapperStorage()->hasUpdated($this->getUnjailedPath($path), $time);
 	}
 
-	/**
-	 * get a cache instance for the storage
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage|null (optional) the storage to pass to the cache
-	 * @return \OC\Files\Cache\Cache
-	 */
 	public function getCache($path = '', $storage = null) {
 		$sourceCache = $this->getWrapperStorage()->getCache($this->getUnjailedPath($path));
 		return new CacheJail($sourceCache, $this->rootPath);
 	}
 
-	/**
-	 * get the user id of the owner of a file or folder
-	 *
-	 * @param string $path
-	 * @return string
-	 */
-	public function getOwner($path) {
+	public function getOwner($path): string|false {
 		return $this->getWrapperStorage()->getOwner($this->getUnjailedPath($path));
 	}
 
-	/**
-	 * get a watcher instance for the cache
-	 *
-	 * @param string $path
-	 * @param \OC\Files\Storage\Storage (optional) the storage to pass to the watcher
-	 * @return \OC\Files\Cache\Watcher
-	 */
 	public function getWatcher($path = '', $storage = null) {
-		if (!$storage) {
-			$storage = $this;
-		}
-		return $this->getWrapperStorage()->getWatcher($this->getUnjailedPath($path), $storage);
+		$sourceWatcher = $this->getWrapperStorage()->getWatcher($this->getUnjailedPath($path), $this->getWrapperStorage());
+		return new JailWatcher($sourceWatcher, $this->rootPath);
 	}
 
 	/**
@@ -438,30 +386,14 @@ class Jail extends Wrapper {
 		return $this->getWrapperStorage()->getMetaData($this->getUnjailedPath($path));
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 * @throws \OCP\Lock\LockedException
-	 */
 	public function acquireLock($path, $type, ILockingProvider $provider) {
 		$this->getWrapperStorage()->acquireLock($this->getUnjailedPath($path), $type, $provider);
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function releaseLock($path, $type, ILockingProvider $provider) {
 		$this->getWrapperStorage()->releaseLock($this->getUnjailedPath($path), $type, $provider);
 	}
 
-	/**
-	 * @param string $path
-	 * @param int $type \OCP\Lock\ILockingProvider::LOCK_SHARED or \OCP\Lock\ILockingProvider::LOCK_EXCLUSIVE
-	 * @param \OCP\Lock\ILockingProvider $provider
-	 */
 	public function changeLock($path, $type, ILockingProvider $provider) {
 		$this->getWrapperStorage()->changeLock($this->getUnjailedPath($path), $type, $provider);
 	}
@@ -514,7 +446,7 @@ class Jail extends Wrapper {
 		return $this->propagator;
 	}
 
-	public function writeStream(string $path, $stream, int $size = null): int {
+	public function writeStream(string $path, $stream, ?int $size = null): int {
 		$storage = $this->getWrapperStorage();
 		if ($storage->instanceOfStorage(IWriteStreamStorage::class)) {
 			/** @var IWriteStreamStorage $storage */

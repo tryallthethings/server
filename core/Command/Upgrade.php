@@ -1,35 +1,9 @@
 <?php
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Andreas Fischer <bantu@owncloud.com>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Nils Wittenbrink <nilswittenbrink@web.de>
- * @author Owen Winkler <a_github@midnightcircus.com>
- * @author Robin Appelman <robin@icewind.nl>
- * @author Sander Ruitenbeek <sander@grids.be>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Thomas Pulzer <t.pulzer@kniel.de>
- * @author Valdnet <47037905+Valdnet@users.noreply.github.com>
- * @author Vincent Petry <vincent@nextcloud.com>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OC\Core\Command;
 
@@ -80,7 +54,7 @@ class Upgrade extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		if (Util::needUpgrade()) {
-			if (OutputInterface::VERBOSITY_NORMAL < $output->getVerbosity()) {
+			if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
 				// Prepend each line with a little timestamp
 				$timestampFormatter = new TimestampFormatter($this->config, $output->getFormatter());
 				$output->setFormatter($timestampFormatter);
@@ -96,7 +70,7 @@ class Upgrade extends Command {
 			$progress->setFormat(" %message%\n %current%/%max% [%bar%] %percent:3s%%");
 			$listener = function (MigratorExecuteSqlEvent $event) use ($progress, $output): void {
 				$message = $event->getSql();
-				if (OutputInterface::VERBOSITY_NORMAL < $output->getVerbosity()) {
+				if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
 					$output->writeln(' Executing SQL ' . $message);
 				} else {
 					if (strlen($message) > 60) {
@@ -132,11 +106,11 @@ class Upgrade extends Command {
 					$progress->finish();
 					$output->writeln('');
 				} elseif ($event instanceof RepairStepEvent) {
-					if (OutputInterface::VERBOSITY_NORMAL < $output->getVerbosity()) {
+					if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
 						$output->writeln('<info>Repair step: ' . $event->getStepName() . '</info>');
 					}
 				} elseif ($event instanceof RepairInfoEvent) {
-					if (OutputInterface::VERBOSITY_NORMAL < $output->getVerbosity()) {
+					if ($output->getVerbosity() > OutputInterface::VERBOSITY_NORMAL) {
 						$output->writeln('<info>Repair info: ' . $event->getMessage() . '</info>');
 					}
 				} elseif ($event instanceof RepairWarningEvent) {
@@ -168,9 +142,9 @@ class Upgrade extends Command {
 			$updater->listen('\OC\Updater', 'updateEnd',
 				function ($success) use ($output, $self) {
 					if ($success) {
-						$message = "<info>Update successful</info>";
+						$message = '<info>Update successful</info>';
 					} else {
-						$message = "<error>Update failed</error>";
+						$message = '<error>Update failed</error>';
 					}
 					$output->writeln($message);
 				});
@@ -201,16 +175,16 @@ class Upgrade extends Command {
 				$output->writeln("<error>$message</error>");
 			});
 			$updater->listen('\OC\Updater', 'setDebugLogLevel', function ($logLevel, $logLevelName) use ($output) {
-				$output->writeln("<info>Setting log level to debug</info>");
+				$output->writeln('<info>Setting log level to debug</info>');
 			});
 			$updater->listen('\OC\Updater', 'resetLogLevel', function ($logLevel, $logLevelName) use ($output) {
-				$output->writeln("<info>Resetting log level</info>");
+				$output->writeln('<info>Resetting log level</info>');
 			});
 			$updater->listen('\OC\Updater', 'startCheckCodeIntegrity', function () use ($output) {
-				$output->writeln("<info>Starting code integrity check...</info>");
+				$output->writeln('<info>Starting code integrity check...</info>');
 			});
 			$updater->listen('\OC\Updater', 'finishedCheckCodeIntegrity', function () use ($output) {
-				$output->writeln("<info>Finished code integrity check</info>");
+				$output->writeln('<info>Finished code integrity check</info>');
 			});
 
 			$success = $updater->upgrade();

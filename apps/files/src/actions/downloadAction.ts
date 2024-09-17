@@ -1,27 +1,14 @@
 /**
- * @copyright Copyright (c) 2023 John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+import { FileAction, Node, FileType, View, DefaultType } from '@nextcloud/files'
+import { t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { FileAction, Permission, Node, FileType, View } from '@nextcloud/files'
-import { translate as t } from '@nextcloud/l10n'
+import { getSharingToken, isPublicShare } from '@nextcloud/sharing/public'
+import { basename } from 'path'
+import { isDownloadable } from '../utils/permissions'
+
 import ArrowDownSvg from '@mdi/svg/svg/arrow-down.svg?raw'
 
 const triggerDownload = function(url: string) {
@@ -33,32 +20,29 @@ const triggerDownload = function(url: string) {
 
 const downloadNodes = function(dir: string, nodes: Node[]) {
 	const secret = Math.random().toString(36).substring(2)
-	const url = generateUrl('/apps/files/ajax/download.php?dir={dir}&files={files}&downloadStartSecret={secret}', {
-		dir,
-		secret,
-		files: JSON.stringify(nodes.map(node => node.basename)),
-	})
+	let url: string
+	if (isPublicShare()) {
+		url = generateUrl('/s/{token}/download/{filename}?path={dir}&files={files}&downloadStartSecret={secret}', {
+			dir,
+			secret,
+			files: JSON.stringify(nodes.map(node => node.basename)),
+			token: getSharingToken(),
+			filename: `${basename(dir)}.zip}`,
+		})
+	} else {
+		url = generateUrl('/apps/files/ajax/download.php?dir={dir}&files={files}&downloadStartSecret={secret}', {
+			dir,
+			secret,
+			files: JSON.stringify(nodes.map(node => node.basename)),
+		})
+	}
 	triggerDownload(url)
-}
-
-const isDownloadable = function(node: Node) {
-	if ((node.permissions & Permission.READ) === 0) {
-		return false
-	}
-
-	// If the mount type is a share, ensure it got download permissions.
-	if (node.attributes['mount-type'] === 'shared') {
-		const downloadAttribute = JSON.parse(node.attributes['share-attributes']).find((attribute: { scope: string; key: string }) => attribute.scope === 'permissions' && attribute.key === 'download')
-		if (downloadAttribute !== undefined && downloadAttribute.enabled === false) {
-			return false
-		}
-	}
-
-	return true
 }
 
 export const action = new FileAction({
 	id: 'download',
+	default: DefaultType.DEFAULT,
+
 	displayName: () => t('files', 'Download'),
 	iconSvgInline: () => ArrowDownSvg,
 

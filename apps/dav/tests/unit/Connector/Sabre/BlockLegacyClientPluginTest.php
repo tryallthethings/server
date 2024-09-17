@@ -1,34 +1,16 @@
 <?php
 
 declare(strict_types=1);
+
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- *
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Joas Schilling <coding@schilljs.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\DAV\Tests\unit\Connector\Sabre;
 
 use OCA\DAV\Connector\Sabre\BlockLegacyClientPlugin;
+use OCA\Theming\ThemingDefaults;
 use OCP\IConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use Sabre\HTTP\RequestInterface;
@@ -40,19 +22,23 @@ use Test\TestCase;
  * @package OCA\DAV\Tests\unit\Connector\Sabre
  */
 class BlockLegacyClientPluginTest extends TestCase {
-	/** @var IConfig|MockObject */
-	private $config;
-	/** @var BlockLegacyClientPlugin */
-	private $blockLegacyClientVersionPlugin;
+
+	private IConfig&MockObject $config;
+	private ThemingDefaults&MockObject $themingDefaults;
+	private BlockLegacyClientPlugin $blockLegacyClientVersionPlugin;
 
 	protected function setUp(): void {
 		parent::setUp();
 
 		$this->config = $this->createMock(IConfig::class);
-		$this->blockLegacyClientVersionPlugin = new BlockLegacyClientPlugin($this->config);
+		$this->themingDefaults = $this->createMock(ThemingDefaults::class);
+		$this->blockLegacyClientVersionPlugin = new BlockLegacyClientPlugin(
+			$this->config,
+			$this->themingDefaults,
+		);
 	}
 
-	public function oldDesktopClientProvider(): array {
+	public static function oldDesktopClientProvider(): array {
 		return [
 			['Mozilla/5.0 (Windows) mirall/1.5.0'],
 			['Mozilla/5.0 (Bogus Text) mirall/1.6.9'],
@@ -64,7 +50,19 @@ class BlockLegacyClientPluginTest extends TestCase {
 	 */
 	public function testBeforeHandlerException(string $userAgent): void {
 		$this->expectException(\Sabre\DAV\Exception\Forbidden::class);
-		$this->expectExceptionMessage('Unsupported client version.');
+
+		$this->themingDefaults
+			->expects($this->once())
+			->method('getSyncClientUrl')
+			->willReturn('https://nextcloud.com/install/#install-clients');
+
+		$this->config
+			->expects($this->once())
+			->method('getSystemValue')
+			->with('minimum.supported.desktop.version', '2.3.0')
+			->willReturn('1.7.0');
+
+		$this->expectExceptionMessage('This version of the client is unsupported. Upgrade to <a href="https://nextcloud.com/install/#install-clients">version 1.7.0 or later</a>.');
 
 		/** @var RequestInterface|MockObject $request */
 		$request = $this->createMock('\Sabre\HTTP\RequestInterface');
@@ -74,11 +72,38 @@ class BlockLegacyClientPluginTest extends TestCase {
 			->with('User-Agent')
 			->willReturn($userAgent);
 
+
+		$this->blockLegacyClientVersionPlugin->beforeHandler($request);
+	}
+
+	/**
+	 * Ensure that there is no room for XSS attack through configured URL / version
+	 * @dataProvider oldDesktopClientProvider
+	 */
+	public function testBeforeHandlerExceptionPreventXSSAttack(string $userAgent): void {
+		$this->expectException(\Sabre\DAV\Exception\Forbidden::class);
+
+		$this->themingDefaults
+			->expects($this->once())
+			->method('getSyncClientUrl')
+			->willReturn('https://example.com"><script>alter("hacked");</script>');
+
 		$this->config
 			->expects($this->once())
 			->method('getSystemValue')
 			->with('minimum.supported.desktop.version', '2.3.0')
-			->willReturn('1.7.0');
+			->willReturn('1.7.0 <script>alert("unsafe")</script>');
+
+		$this->expectExceptionMessage('This version of the client is unsupported. Upgrade to <a href="https://example.com&quot;&gt;&lt;script&gt;alter(&quot;hacked&quot;);&lt;/script&gt;">version 1.7.0 &lt;script&gt;alert(&quot;unsafe&quot;)&lt;/script&gt; or later</a>.');
+
+		/** @var RequestInterface|MockObject $request */
+		$request = $this->createMock('\Sabre\HTTP\RequestInterface');
+		$request
+			->expects($this->once())
+			->method('getHeader')
+			->with('User-Agent')
+			->willReturn($userAgent);
+
 
 		$this->blockLegacyClientVersionPlugin->beforeHandler($request);
 	}

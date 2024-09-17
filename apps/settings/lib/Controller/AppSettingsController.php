@@ -1,35 +1,8 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, ownCloud, Inc.
- * @copyright Copyright (c) 2016, Lukas Reschke <lukas@statuscode.ch>
- *
- * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Kesselberg <mail@danielkesselberg.de>
- * @author Joas Schilling <coding@schilljs.com>
- * @author John Molakvoæ <skjnldsv@protonmail.com>
- * @author Julius Härtl <jus@bitgrid.net>
- * @author Lukas Reschke <lukas@statuscode.ch>
- * @author Morris Jobke <hey@morrisjobke.de>
- * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Kate Döen <kate.doeen@nextcloud.com>
- * @author Ferdinand Thiessen <opensource@fthiessen.de>
- *
- * @license AGPL-3.0
- *
- * This code is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License, version 3,
- * along with this program. If not, see <http://www.gnu.org/licenses/>
- *
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 namespace OCA\Settings\Controller;
 
@@ -41,12 +14,14 @@ use OC\App\AppStore\Version\VersionParser;
 use OC\App\DependencyAnalyzer;
 use OC\App\Platform;
 use OC\Installer;
-use OC_App;
 use OCP\App\AppPathNotFoundException;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
+use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -101,10 +76,9 @@ class AppSettingsController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @return TemplateResponse
 	 */
+	#[NoCSRFRequired]
 	public function viewApps(): TemplateResponse {
 		$this->navigationManager->setActiveEntry('core_apps');
 
@@ -127,23 +101,21 @@ class AppSettingsController extends Controller {
 
 	/**
 	 * Get all active entries for the app discover section
-	 *
-	 * @NoCSRFRequired
 	 */
+	#[NoCSRFRequired]
 	public function getAppDiscoverJSON(): JSONResponse {
 		$data = $this->discoverFetcher->get(true);
 		return new JSONResponse($data);
 	}
 
 	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 *
 	 * Get a image for the app discover section - this is proxied for privacy and CSP reasons
 	 *
 	 * @param string $image
 	 * @throws \Exception
 	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
 	public function getAppDiscoverMedia(string $fileName): Response {
 		$etag = $this->discoverFetcher->getETag() ?? date('Y-m');
 		$folder = null;
@@ -402,7 +374,7 @@ class AppSettingsController extends Controller {
 			try {
 				$this->appManager->getAppPath($app['id']);
 				$existsLocally = true;
-			} catch (AppPathNotFoundException $e) {
+			} catch (AppPathNotFoundException) {
 				$existsLocally = false;
 			}
 
@@ -482,12 +454,11 @@ class AppSettingsController extends Controller {
 	}
 
 	/**
-	 * @PasswordConfirmationRequired
-	 *
 	 * @param string $appId
 	 * @param array $groups
 	 * @return JSONResponse
 	 */
+	#[PasswordConfirmationRequired]
 	public function enableApp(string $appId, array $groups = []): JSONResponse {
 		return $this->enableApps([$appId], $groups);
 	}
@@ -497,17 +468,17 @@ class AppSettingsController extends Controller {
 	 *
 	 * apps will be enabled for specific groups only if $groups is defined
 	 *
-	 * @PasswordConfirmationRequired
 	 * @param array $appIds
 	 * @param array $groups
 	 * @return JSONResponse
 	 */
+	#[PasswordConfirmationRequired]
 	public function enableApps(array $appIds, array $groups = []): JSONResponse {
 		try {
 			$updateRequired = false;
 
 			foreach ($appIds as $appId) {
-				$appId = OC_App::cleanAppId($appId);
+				$appId = $this->appManager->cleanAppId($appId);
 
 				// Check if app is already downloaded
 				/** @var Installer $installer */
@@ -549,25 +520,23 @@ class AppSettingsController extends Controller {
 	}
 
 	/**
-	 * @PasswordConfirmationRequired
-	 *
 	 * @param string $appId
 	 * @return JSONResponse
 	 */
+	#[PasswordConfirmationRequired]
 	public function disableApp(string $appId): JSONResponse {
 		return $this->disableApps([$appId]);
 	}
 
 	/**
-	 * @PasswordConfirmationRequired
-	 *
 	 * @param array $appIds
 	 * @return JSONResponse
 	 */
+	#[PasswordConfirmationRequired]
 	public function disableApps(array $appIds): JSONResponse {
 		try {
 			foreach ($appIds as $appId) {
-				$appId = OC_App::cleanAppId($appId);
+				$appId = $this->appManager->cleanAppId($appId);
 				$this->appManager->disableApp($appId);
 			}
 			return new JSONResponse([]);
@@ -578,13 +547,12 @@ class AppSettingsController extends Controller {
 	}
 
 	/**
-	 * @PasswordConfirmationRequired
-	 *
 	 * @param string $appId
 	 * @return JSONResponse
 	 */
+	#[PasswordConfirmationRequired]
 	public function uninstallApp(string $appId): JSONResponse {
-		$appId = OC_App::cleanAppId($appId);
+		$appId = $this->appManager->cleanAppId($appId);
 		$result = $this->installer->removeApp($appId);
 		if ($result !== false) {
 			$this->appManager->clearAppsCache();
@@ -598,7 +566,7 @@ class AppSettingsController extends Controller {
 	 * @return JSONResponse
 	 */
 	public function updateApp(string $appId): JSONResponse {
-		$appId = OC_App::cleanAppId($appId);
+		$appId = $this->appManager->cleanAppId($appId);
 
 		$this->config->setSystemValue('maintenance', true);
 		try {
@@ -625,7 +593,7 @@ class AppSettingsController extends Controller {
 	}
 
 	public function force(string $appId): JSONResponse {
-		$appId = OC_App::cleanAppId($appId);
+		$appId = $this->appManager->cleanAppId($appId);
 		$this->appManager->ignoreNextcloudRequirementForApp($appId);
 		return new JSONResponse();
 	}
