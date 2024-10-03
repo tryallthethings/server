@@ -28,6 +28,24 @@ class MetadataRequestService {
 	) {
 	}
 
+	private function getStorageId(IFilesMetadata $filesMetadata): int {
+		if ($filesMetadata instanceof FilesMetadata && $filesMetadata->getStorageId()) {
+			return $filesMetadata->getStorageId();
+		}
+		// all code paths that lead to saving metadata *should* have the storage id set
+		// this fallback is there just in case
+		$query = $this->dbConnection->getQueryBuilder();
+		$query->select('storage')
+			->from('filecache')
+			->where($query->expr()->eq('fileid', $query->createNamedParameter($filesMetadata->getFileId(), IQueryBuilder::PARAM_INT)));
+		$storageId = $query->executeQuery()->fetchColumn();
+
+		if ($filesMetadata instanceof FilesMetadata) {
+			$filesMetadata->setStorageId($storageId);
+		}
+		return $storageId;
+	}
+
 	/**
 	 * store metadata into database
 	 *
