@@ -9,7 +9,6 @@ namespace OCA\DAV\CalDAV;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
-use OC\DB\QueryBuilder\Literal;
 use OCA\DAV\AppInfo\Application;
 use OCA\DAV\CalDAV\Sharing\Backend;
 use OCA\DAV\Connector\Sabre\Principal;
@@ -3560,17 +3559,20 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 */
 	protected function purgeCalendarInvitations(int $calendarId) {
 		// select all calendar object uid's
-		$cmd1 = $this->db->getQueryBuilder();
-		$cmd1->select('uid')
+		$cmd = $this->db->getQueryBuilder();
+		$cmd->select('uid')
 			->from($this->dbObjectsTable)
-			->where('calendarid = :cid');
+			->where($cmd->expr()->eq('calendarid', $cmd->createNamedParameter($calendarId)));
+		// execute command
+		$allIds = $cmd->executeQuery()->fetchAll(\PDO::FETCH_COLUMN);
+		$allIds = array_chunk($allIds, 1000);
 		// delete all links that match object uid's
-		$cmd2 = $this->db->getQueryBuilder();
-		$cmd2->delete($this->dbObjectInvitationsTable)
-			->where($cmd2->expr()->in('uid', new Literal($cmd1->getSQL())))
-			->setParameter('cid', $calendarId);
-		
-		$cmd2->executeStatement();
+		foreach ($allIds as $chunckIds) {
+			$cmd = $this->db->getQueryBuilder();
+			$cmd->delete($this->dbObjectInvitationsTable)
+				->where($cmd->expr()->in('uid', $cmd->createNamedParameter($chunckIds, IQueryBuilder::PARAM_STR_ARRAY), IQueryBuilder::PARAM_STR_ARRAY));
+			$cmd->executeStatement();
+		}
 	}
 
 	/**
@@ -3581,9 +3583,9 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 * @param string $eventId UID of the event
 	 */
 	protected function purgeObjectInvitations(string $eventId) {
-		$query = $this->db->getQueryBuilder();
-		$query->delete($this->dbObjectInvitationsTable)
-			->where($query->expr()->eq('uid', $query->createNamedParameter($eventId)));
-		$query->executeStatement();
+		$cmd = $this->db->getQueryBuilder();
+		$cmd->delete($this->dbObjectInvitationsTable)
+			->where($cmd->expr()->eq('uid', $cmd->createNamedParameter($eventId)));
+		$cmd->executeStatement();
 	}
 }
