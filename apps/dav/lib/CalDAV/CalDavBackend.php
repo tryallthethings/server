@@ -3556,8 +3556,10 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 * @since 31.0.0
 	 *
 	 * @param int $calendarId
+	 * 
+	 * @return void
 	 */
-	protected function purgeCalendarInvitations(int $calendarId) {
+	protected function purgeCalendarInvitations(int $calendarId): void {
 		// select all calendar object uid's
 		$cmd = $this->db->getQueryBuilder();
 		$cmd->select('uid')
@@ -3581,8 +3583,10 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 * @since 31.0.0
 	 *
 	 * @param string $eventId UID of the event
+	 * 
+	 * @return void
 	 */
-	protected function purgeObjectInvitations(string $eventId) {
+	protected function purgeObjectInvitations(string $eventId): void {
 		$cmd = $this->db->getQueryBuilder();
 		$cmd->delete($this->dbObjectInvitationsTable)
 			->where($cmd->expr()->eq('uid', $cmd->createNamedParameter($eventId)));
