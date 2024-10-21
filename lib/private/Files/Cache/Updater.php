@@ -200,11 +200,19 @@ class Updater implements IUpdater {
 		$sourceInfo = $sourceCache->get($source);
 
 		if ($sourceInfo !== false) {
+			// Remove existing cache entry to no reuse the fileId.
 			if ($this->cache->inCache($target)) {
-				$this->cache->remove($target);
+				$existingCacheInfo = $this->cache->get($target);
+				// Do not remove the existing target if it has just been created.
+				// It was probably created by the same operation and we want to keep the fileId.
+				if (time() - $existingCacheInfo->getMTime() > 1) {
+					$this->cache->remove($target);
+				}
 			}
 
-			$operation($sourceCache, $sourceInfo);
+			if (!$this->cache->inCache($target)) {
+				$operation($sourceCache, $sourceInfo);
+			}
 
 			$sourceExtension = pathinfo($source, PATHINFO_EXTENSION);
 			$targetExtension = pathinfo($target, PATHINFO_EXTENSION);
