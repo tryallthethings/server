@@ -1483,7 +1483,7 @@ class Manager implements IManager {
 	 *
 	 * @throws ShareNotFound
 	 */
-	protected function checkShare(IShare $share): void {
+	public function checkShare(IShare $share): void {
 		if ($share->isExpired()) {
 			$this->deleteShare($share);
 			throw new ShareNotFound($this->l->t('The requested share does not exist anymore'));

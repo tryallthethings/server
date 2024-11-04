@@ -20,6 +20,7 @@ use OC\Repair\CleanUpAbandonedApps;
 use OC\Repair\ClearFrontendCaches;
 use OC\Repair\ClearGeneratedAvatarCache;
 use OC\Repair\Collation;
+use OC\Repair\DeleteInvalidShares;
 use OC\Repair\Events\RepairAdvanceEvent;
 use OC\Repair\Events\RepairErrorEvent;
 use OC\Repair\Events\RepairFinishEvent;
@@ -213,6 +214,7 @@ class Repair implements IOutput {
 			),
 			\OC::$server->get(ValidatePhoneNumber::class),
 			\OC::$server->get(DeleteSchedulingObjects::class),
+			new DeleteInvalidShares(),
 		];
 	}
 
