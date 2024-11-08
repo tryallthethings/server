@@ -297,6 +297,7 @@ export default defineComponent({
 	margin-block: 0;
 	margin-inline: 10px;
 	min-width: 0;
+	gap: var(--default-grid-baseline);
 
 	:deep() {
 		a {
