@@ -21,6 +21,7 @@ use OCA\Files_Sharing\SharedStorage;
 use OCA\GlobalSiteSelector\Service\SlaveService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\ApiRoute;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\DataResponse;
@@ -2157,5 +2158,21 @@ class ShareAPIController extends OCSController {
 		} catch (ShareNotFound $e) {
 			throw new OCSNotFoundException($this->l->t('Wrong share ID, share does not exist'));
 		}
+	}
+
+	/**
+	 * Get a unique share token
+	 *
+	 * @return DataResponse<Http::STATUS_OK, array{token: string}>
+	 *
+	 * 200: Token generated successfully
+	 */
+	#[ApiRoute('GET', '/api/v1/token')]
+	#[NoAdminRequired]
+	public function getToken(): DataResponse {
+		$token = $this->shareManager->generateToken();
+		return new DataResponse([
+			'token' => $token,
+		]);
 	}
 }

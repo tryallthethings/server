@@ -7,6 +7,7 @@
  */
 namespace OCP\Share;
 
+use OC\Share20\Exception\ShareTokenException;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 
@@ -519,4 +520,12 @@ interface IManager {
 	 * @since 18.0.0
 	 */
 	public function getAllShares(): iterable;
+
+	/**
+	 * Generate a unique share token
+	 *
+	 * @throws ShareTokenException Failed to generate a unique token
+	 * @since 31.0.0
+	 */
+	public function generateToken(): string;
 }

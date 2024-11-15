@@ -105,9 +105,22 @@
 				role="region">
 				<section>
 					<NcInputField v-if="isPublicShare"
+						class="sharingTabDetailsView__label"
 						autocomplete="off"
 						:label="t('files_sharing', 'Share label')"
 						:value.sync="share.label" />
+					<NcInputField v-if="isPublicShare && !isNewShare"
+						autocomplete="off"
+						:label="t('files_sharing', 'Link token')"
+						:helper-text="tokenHelperText"
+						show-trailing-button
+						:trailing-button-label="t('files_sharing', 'Generate new token')"
+						@trailing-button-click="generateNewToken"
+						:value.sync="share.token">
+						<template #trailing-button-icon>
+							<Reload />
+						</template>
+					</NcInputField>
 					<template v-if="isPublicShare">
 						<NcCheckboxRadioSwitch :checked.sync="isPasswordProtected" :disabled="isPasswordEnforced">
 							{{ t('files_sharing', 'Set password') }}
@@ -271,6 +284,7 @@ import UploadIcon from 'vue-material-design-icons/Upload.vue'
 import MenuDownIcon from 'vue-material-design-icons/MenuDown.vue'
 import MenuUpIcon from 'vue-material-design-icons/MenuUp.vue'
 import DotsHorizontalIcon from 'vue-material-design-icons/DotsHorizontal.vue'
+import Reload from 'vue-material-design-icons/Reload.vue'
 
 import ExternalShareAction from '../components/ExternalShareAction.vue'
 
@@ -279,6 +293,7 @@ import Share from '../models/Share.ts'
 import ShareRequests from '../mixins/ShareRequests.js'
 import ShareTypes from '../mixins/ShareTypes.js'
 import SharesMixin from '../mixins/SharesMixin.js'
+import { generateToken } from '../services/TokenService.ts'
 import logger from '../services/logger.ts'
 
 import {
@@ -311,6 +326,7 @@ export default {
 		MenuDownIcon,
 		MenuUpIcon,
 		DotsHorizontalIcon,
+		Reload,
 	},
 	mixins: [ShareTypes, ShareRequests, SharesMixin],
 	props: {
@@ -557,6 +573,13 @@ export default {
 			return t('files_sharing', 'Update share')
 
 		},
+
+		tokenHelperText() {
+			return t('files_sharing', 'Set the public link token. Access the share at /s/{token}', {
+				token: this.share.token || '<token>',
+			}, undefined, { escape: false, sanitize: false })
+		},
+
 		/**
 		 * Can the sharer set whether the sharee can edit the file ?
 		 *
@@ -763,6 +786,10 @@ export default {
 	},
 
 	methods: {
+		generateNewToken() {
+			this.share.token = generateToken()
+		},
+
 		updateAtomicPermissions({
 			isReadChecked = this.hasRead,
 			isEditChecked = this.canEdit,
@@ -1174,6 +1201,10 @@ export default {
 				padding-inline-start: 1.5em;
 			}
 		}
+	}
+
+	&__label {
+		padding-block-end: 6px;
 	}
 
 	&__delete {
