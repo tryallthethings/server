@@ -7,11 +7,6 @@ $baseDir = dirname(dirname($vendorDir));
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'NCU\\Security\\PublicPrivateKeyPairs\\Exceptions\\KeyPairConflictException' => $baseDir . '/lib/unstable/Security/PublicPrivateKeyPairs/Exceptions/KeyPairConflictException.php',
-    'NCU\\Security\\PublicPrivateKeyPairs\\Exceptions\\KeyPairException' => $baseDir . '/lib/unstable/Security/PublicPrivateKeyPairs/Exceptions/KeyPairException.php',
-    'NCU\\Security\\PublicPrivateKeyPairs\\Exceptions\\KeyPairNotFoundException' => $baseDir . '/lib/unstable/Security/PublicPrivateKeyPairs/Exceptions/KeyPairNotFoundException.php',
-    'NCU\\Security\\PublicPrivateKeyPairs\\IKeyPairManager' => $baseDir . '/lib/unstable/Security/PublicPrivateKeyPairs/IKeyPairManager.php',
-    'NCU\\Security\\PublicPrivateKeyPairs\\Model\\IKeyPair' => $baseDir . '/lib/unstable/Security/PublicPrivateKeyPairs/Model/IKeyPair.php',
     'NCU\\Security\\Signature\\Exceptions\\IdentityNotFoundException' => $baseDir . '/lib/unstable/Security/Signature/Exceptions/IdentityNotFoundException.php',
     'NCU\\Security\\Signature\\Exceptions\\IncomingRequestException' => $baseDir . '/lib/unstable/Security/Signature/Exceptions/IncomingRequestException.php',
     'NCU\\Security\\Signature\\Exceptions\\IncomingRequestNotFoundException' => $baseDir . '/lib/unstable/Security/Signature/Exceptions/IncomingRequestNotFoundException.php',
@@ -1920,8 +1915,6 @@ return array(
     'OC\\Security\\Ip\\Range' => $baseDir . '/lib/private/Security/Ip/Range.php',
     'OC\\Security\\Ip\\RemoteAddress' => $baseDir . '/lib/private/Security/Ip/RemoteAddress.php',
     'OC\\Security\\Normalizer\\IpAddress' => $baseDir . '/lib/private/Security/Normalizer/IpAddress.php',
-    'OC\\Security\\PublicPrivateKeyPairs\\KeyPairManager' => $baseDir . '/lib/private/Security/PublicPrivateKeyPairs/KeyPairManager.php',
-    'OC\\Security\\PublicPrivateKeyPairs\\Model\\KeyPair' => $baseDir . '/lib/private/Security/PublicPrivateKeyPairs/Model/KeyPair.php',
     'OC\\Security\\RateLimiting\\Backend\\DatabaseBackend' => $baseDir . '/lib/private/Security/RateLimiting/Backend/DatabaseBackend.php',
     'OC\\Security\\RateLimiting\\Backend\\IBackend' => $baseDir . '/lib/private/Security/RateLimiting/Backend/IBackend.php',
     'OC\\Security\\RateLimiting\\Backend\\MemoryCacheBackend' => $baseDir . '/lib/private/Security/RateLimiting/Backend/MemoryCacheBackend.php',
