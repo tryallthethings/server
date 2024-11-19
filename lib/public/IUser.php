@@ -50,13 +50,11 @@ interface IUser {
 	 * @return int
 	 * @since 8.0.0
 	 */
-	public function getLastLogin();
+	public function getLastLogin(): int;
 
 	/**
-	 * returns the timestamp of the user's first login or 0 if the user did never
-	 * login
+	 * Returns the timestamp of the user's first login or 0 if the user did never login
 	 *
-	 * @return int
 	 * @since 31.0.0
 	 */
 	public function getFirstLogin(): int;
