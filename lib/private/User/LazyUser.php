@@ -64,7 +64,7 @@ class LazyUser implements IUser {
 		return $this->getUser()->getLastLogin();
 	}
 
-	public function updateLastLoginTimestamp() {
+	public function updateLastLoginTimestamp(): bool {
 		return $this->getUser()->updateLastLoginTimestamp();
 	}
 

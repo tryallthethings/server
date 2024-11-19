@@ -53,10 +53,21 @@ interface IUser {
 	public function getLastLogin();
 
 	/**
-	 * updates the timestamp of the most recent login of this user
+	 * returns the timestamp of the user's first login or 0 if the user did never
+	 * login
+	 *
+	 * @return int
+	 * @since 31.0.0
+	 */
+	public function getFirstLogin(): int;
+
+	/**
+	 * Updates the timestamp of the most recent login of this user (and first login if needed)
+	 *
+	 * @return bool whether this is the first login
 	 * @since 8.0.0
 	 */
-	public function updateLastLoginTimestamp();
+	public function updateLastLoginTimestamp(): bool;
 
 	/**
 	 * Delete the user
