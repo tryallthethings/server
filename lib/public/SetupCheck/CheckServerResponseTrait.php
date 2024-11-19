@@ -149,7 +149,7 @@ trait CheckServerResponseTrait {
 	 */
 	private function normalizeUrl(string $url, bool $removeWebroot): string {
 		if (filter_var($url, FILTER_VALIDATE_URL)) { // reasonable URL?
-			if (!$removeWebroot) { // no need to do anything else 
+			if (!$removeWebroot) { // no need to do anything else
 				return rtrim($url, '/');
 			} else {
 				$segments = parse_url($url); // parse the url
